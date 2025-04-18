@@ -16,31 +16,56 @@ func (p *Provider) Metadata() openfeature.Metadata {
 
 // BooleanEvaluation returns a boolean flag evaluation result.
 // It returns defaultValue if an error occurs.
-func (p *Provider) BooleanEvaluation(ctx context.Context, flag string, defaultValue bool, evalCtx openfeature.FlattenedContext) openfeature.BoolResolutionDetail {
+func (p *Provider) BooleanEvaluation(
+	ctx context.Context,
+	flag string,
+	defaultValue bool,
+	evalCtx openfeature.FlattenedContext,
+) openfeature.BoolResolutionDetail {
 	return openfeature.BoolResolutionDetail{}
 }
 
 // StringEvaluation returns a string flag evaluation result.
 // It returns defaultValue if an error occurs.
-func (p *Provider) StringEvaluation(ctx context.Context, flag string, defaultValue string, evalCtx openfeature.FlattenedContext) openfeature.StringResolutionDetail {
+func (p *Provider) StringEvaluation(
+	ctx context.Context,
+	flag string,
+	defaultValue string,
+	evalCtx openfeature.FlattenedContext,
+) openfeature.StringResolutionDetail {
 	return openfeature.StringResolutionDetail{}
 }
 
 // FloatEvaluation returns a float flag evaluation result.
 // It returns defaultValue if an error occurs.
-func (p *Provider) FloatEvaluation(ctx context.Context, flag string, defaultValue float64, evalCtx openfeature.FlattenedContext) openfeature.FloatResolutionDetail {
+func (p *Provider) FloatEvaluation(
+	ctx context.Context,
+	flag string,
+	defaultValue float64,
+	evalCtx openfeature.FlattenedContext,
+) openfeature.FloatResolutionDetail {
 	return openfeature.FloatResolutionDetail{}
 }
 
 // IntEvaluation returns an int flag evaluation result.
 // It returns defaultValue if an error occurs.
-func (p *Provider) IntEvaluation(ctx context.Context, flag string, defaultValue int64, evalCtx openfeature.FlattenedContext) openfeature.IntResolutionDetail {
+func (p *Provider) IntEvaluation(
+	ctx context.Context,
+	flag string,
+	defaultValue int64,
+	evalCtx openfeature.FlattenedContext,
+) openfeature.IntResolutionDetail {
 	return openfeature.IntResolutionDetail{}
 }
 
 // ObjectEvaluation returns an object flag evaluation result.
 // It returns defaultValue if an error occurs.
-func (p *Provider) ObjectEvaluation(ctx context.Context, flag string, defaultValue interface{}, evalCtx openfeature.FlattenedContext) openfeature.InterfaceResolutionDetail {
+func (p *Provider) ObjectEvaluation(
+	ctx context.Context,
+	flag string,
+	defaultValue interface{},
+	evalCtx openfeature.FlattenedContext,
+) openfeature.InterfaceResolutionDetail {
 	return openfeature.InterfaceResolutionDetail{}
 }
 
