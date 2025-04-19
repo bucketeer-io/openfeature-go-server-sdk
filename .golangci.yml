@@ -1,0 +1,31 @@
+version: "2"
+run:
+  tests: false
+linters:
+  default: none
+  enable:
+    - errcheck
+    - gosec
+    - govet
+    - ineffassign
+    - lll
+    - staticcheck
+    - unused
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+       # put imports beginning with prefix after 3rd-party packages;
+       # it's a comma-separated list of prefixes
+      local-prefixes:
+        - github.com/bucketeer-io/openfeature-go-server-sdk
+
