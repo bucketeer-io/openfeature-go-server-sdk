@@ -260,7 +260,7 @@ func toBucketeerUser(evalCtx openfeature.FlattenedContext) (*user.User, error) {
 		case openfeature.TargetingKey:
 			valStr, ok := val.(string)
 			if !ok {
-				return nil, fmt.Errorf("key %q can not be converted to %T", key, valStr)
+				return nil, fmt.Errorf("key %q can not be converted to string", key)
 			}
 			bucketeerUser.ID = valStr
 		default:
