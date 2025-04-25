@@ -254,7 +254,7 @@ func toBucketeerUser(evalCtx openfeature.FlattenedContext) (*user.User, error) {
 		case "Data":
 			valMap, ok := val.(map[string]string)
 			if !ok {
-				return nil, fmt.Errorf("key %q can not be converted to %T", key, valMap)
+				return nil, fmt.Errorf("key %q can not be converted to map[string]string", key)
 			}
 			bucketeerUser.Data = valMap
 		case openfeature.TargetingKey:
