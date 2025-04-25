@@ -157,10 +157,8 @@ func TestBooleanEvaluation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
-			// Create custom mock SDK
 			mockSDK := test.mockSDK
 
-			// Use newTestProvider function
 			provider := newTestProvider(mockSDK)
 
 			flatCtx := openfeature.FlattenedContext{}
@@ -239,12 +237,10 @@ func TestStringEvaluation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
-			// Create custom mock SDK
 			mockSDK := &mockBucketeerSDK{
 				stringEvaluation: test.stringEvaluation,
 			}
 
-			// Use newTestProvider function
 			provider := newTestProvider(mockSDK)
 
 			flatCtx := openfeature.FlattenedContext{}
@@ -323,12 +319,10 @@ func TestIntEvaluation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
-			// Create custom mock SDK
 			mockSDK := &mockBucketeerSDK{
 				int64Evaluation: test.int64Evaluation,
 			}
 
-			// Use newTestProvider function
 			provider := newTestProvider(mockSDK)
 
 			flatCtx := openfeature.FlattenedContext{}
@@ -407,12 +401,10 @@ func TestFloatEvaluation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
-			// Create custom mock SDK
 			mockSDK := &mockBucketeerSDK{
 				float64Evaluation: test.float64Evaluation,
 			}
 
-			// Use newTestProvider function
 			provider := newTestProvider(mockSDK)
 
 			flatCtx := openfeature.FlattenedContext{}
@@ -503,12 +495,10 @@ func TestObjectEvaluation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
-			// Create custom mock SDK
 			mockSDK := &mockBucketeerSDK{
 				objectEvaluation: test.objectEvaluation,
 			}
 
-			// Use newTestProvider function
 			provider := newTestProvider(mockSDK)
 
 			flatCtx := openfeature.FlattenedContext{}
@@ -597,9 +587,7 @@ func TestToBucketeerUser(t *testing.T) {
 }
 
 func TestProviderMetadata(t *testing.T) {
-	// Create dummy mock for testing
 	mockSDK := &mockBucketeerSDK{}
-	// Use newTestProvider function
 	provider := newTestProvider(mockSDK)
 
 	metadata := provider.Metadata()
@@ -607,9 +595,7 @@ func TestProviderMetadata(t *testing.T) {
 }
 
 func TestProviderHooks(t *testing.T) {
-	// Create dummy mock for testing
 	mockSDK := &mockBucketeerSDK{}
-	// Use newTestProvider function
 	provider := newTestProvider(mockSDK)
 
 	hooks := provider.Hooks()
