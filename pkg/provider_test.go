@@ -537,10 +537,8 @@ func TestToBucketeerUser(t *testing.T) {
 			desc: "valid targeting key and valid data",
 			evalCtx: openfeature.FlattenedContext{
 				openfeature.TargetingKey: "test-user",
-				"Data": map[string]string{
-					"key1": "value1",
-					"key2": "value2",
-				},
+				"key1":                   "value1",
+				"key2":                   "value2",
 			},
 			expectedID:  "test-user",
 			expectedErr: nil,
@@ -551,22 +549,13 @@ func TestToBucketeerUser(t *testing.T) {
 				openfeature.TargetingKey: 123,
 			},
 			expectedID:  "",
-			expectedErr: errors.New(`key "targetingKey" can not be converted to string`),
-		},
-		{
-			desc: "invalid data type",
-			evalCtx: openfeature.FlattenedContext{
-				openfeature.TargetingKey: "test-user",
-				"Data":                   "not-a-map",
-			},
-			expectedID:  "",
-			expectedErr: errors.New(`key "Data" can not be converted to map[string]string`),
+			expectedErr: errors.New(`TARGETING_KEY_MISSING: key "targetingKey", value '{' can not be converted to string`),
 		},
 		{
 			desc:        "empty context",
 			evalCtx:     openfeature.FlattenedContext{},
 			expectedID:  "",
-			expectedErr: nil,
+			expectedErr: errors.New("TARGETING_KEY_MISSING: evalCtx is empty"),
 		},
 	}
 
@@ -577,7 +566,7 @@ func TestToBucketeerUser(t *testing.T) {
 
 			if test.expectedErr != nil {
 				assert.NotNil(t, err)
-				assert.Contains(t, err.Error(), test.expectedErr.Error())
+				assert.Equal(t, test.expectedErr.Error(), err.Error())
 			} else {
 				assert.Nil(t, err)
 				assert.Equal(t, test.expectedID, bucketeerUser.ID)

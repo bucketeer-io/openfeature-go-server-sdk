@@ -111,12 +111,13 @@ func (p *Provider) BooleanEvaluation(
 		return openfeature.BoolResolutionDetail{
 			Value: defaultValue,
 			ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-				Reason: openfeature.ErrorReason,
+				ResolutionError: *err,
+				Reason:          openfeature.ErrorReason,
 			},
 		}
 	}
 
-	evaluation := p.sdk.BoolVariationDetails(ctx, bucketeerUser, flag, defaultValue)
+	evaluation := p.sdk.BoolVariationDetails(ctx, ToPtr(bucketeerUser), flag, defaultValue)
 	return openfeature.BoolResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
@@ -138,12 +139,13 @@ func (p *Provider) StringEvaluation(
 		return openfeature.StringResolutionDetail{
 			Value: defaultValue,
 			ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-				Reason: openfeature.ErrorReason,
+				ResolutionError: *err,
+				Reason:          openfeature.ErrorReason,
 			},
 		}
 	}
 
-	evaluation := p.sdk.StringVariationDetails(ctx, bucketeerUser, flag, defaultValue)
+	evaluation := p.sdk.StringVariationDetails(ctx, ToPtr(bucketeerUser), flag, defaultValue)
 	return openfeature.StringResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
@@ -166,12 +168,13 @@ func (p *Provider) FloatEvaluation(
 		return openfeature.FloatResolutionDetail{
 			Value: defaultValue,
 			ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-				Reason: openfeature.ErrorReason,
+				ResolutionError: *err,
+				Reason:          openfeature.ErrorReason,
 			},
 		}
 	}
 
-	evaluation := p.sdk.Float64VariationDetails(ctx, bucketeerUser, flag, defaultValue)
+	evaluation := p.sdk.Float64VariationDetails(ctx, ToPtr(bucketeerUser), flag, defaultValue)
 	return openfeature.FloatResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
@@ -194,12 +197,13 @@ func (p *Provider) IntEvaluation(
 		return openfeature.IntResolutionDetail{
 			Value: defaultValue,
 			ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-				Reason: openfeature.ErrorReason,
+				ResolutionError: *err,
+				Reason:          openfeature.ErrorReason,
 			},
 		}
 	}
 
-	evaluation := p.sdk.Int64VariationDetails(ctx, bucketeerUser, flag, defaultValue)
+	evaluation := p.sdk.Int64VariationDetails(ctx, ToPtr(bucketeerUser), flag, defaultValue)
 	return openfeature.IntResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
@@ -222,12 +226,13 @@ func (p *Provider) ObjectEvaluation(
 		return openfeature.InterfaceResolutionDetail{
 			Value: defaultValue,
 			ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-				Reason: openfeature.ErrorReason,
+				ResolutionError: *err,
+				Reason:          openfeature.ErrorReason,
 			},
 		}
 	}
 
-	evaluation := p.sdk.ObjectVariationDetails(ctx, bucketeerUser, flag, defaultValue)
+	evaluation := p.sdk.ObjectVariationDetails(ctx, ToPtr(bucketeerUser), flag, defaultValue)
 	return openfeature.InterfaceResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
@@ -242,29 +247,47 @@ func (p *Provider) Hooks() []openfeature.Hook {
 	return []openfeature.Hook{}
 }
 
-func toBucketeerUser(evalCtx openfeature.FlattenedContext) (*user.User, error) {
+func toBucketeerUser(evalCtx openfeature.FlattenedContext) (user.User, *openfeature.ResolutionError) {
 	if len(evalCtx) == 0 {
-		return &user.User{}, nil
+		return user.User{}, ToPtr(openfeature.NewTargetingKeyMissingResolutionError("evalCtx is empty"))
 	}
 
-	bucketeerUser := &user.User{}
+	_, exists := evalCtx[openfeature.TargetingKey]
+	if !exists {
+		return user.User{}, ToPtr(openfeature.NewTargetingKeyMissingResolutionError("targeting key is missing"))
+	}
+
+	bucketeerUser := user.User{
+		Data: make(map[string]string),
+	}
 	for key, val := range evalCtx {
 		switch key {
-		case "Data":
-			valMap, ok := val.(map[string]string)
-			if !ok {
-				return nil, fmt.Errorf("key %q can not be converted to map[string]string", key)
-			}
-			bucketeerUser.Data = valMap
 		case openfeature.TargetingKey:
 			valStr, ok := val.(string)
 			if !ok {
-				return nil, fmt.Errorf("key %q can not be converted to string", key)
+				return user.User{},
+					ToPtr(openfeature.NewTargetingKeyMissingResolutionError(
+						fmt.Sprintf("key %q, value %q can not be converted to string", key, val),
+					),
+					)
 			}
 			bucketeerUser.ID = valStr
 		default:
+			valStr, ok := val.(string)
+			if !ok {
+				return user.User{},
+					ToPtr(openfeature.NewParseErrorResolutionError(
+						fmt.Sprintf("key %q, value %q can not be converted to string", key, val),
+					),
+					)
+			}
+			bucketeerUser.Data[key] = valStr
 		}
 	}
 
 	return bucketeerUser, nil
+}
+
+func ToPtr[T any](v T) *T {
+	return &v
 }
