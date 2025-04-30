@@ -82,20 +82,19 @@ func (p *Provider) Metadata() openfeature.Metadata {
 // convertReason converts Bucketeer SDK's EvaluationReason to OpenFeature's Reason
 func convertReason(reason model.EvaluationReason) openfeature.Reason {
 	switch reason {
-	case model.EvaluationReasonTarget:
+	case model.EvaluationReasonTarget,
+		model.EvaluationReasonPrerequisite:
 		return openfeature.TargetingMatchReason
 	case model.EvaluationReasonRule:
-		return openfeature.TargetingMatchReason
+		return openfeature.Reason(reason)
 	case model.EvaluationReasonDefault:
 		return openfeature.DefaultReason
 	case model.EvaluationReasonClient:
 		return openfeature.StaticReason
 	case model.EvaluationReasonOffVariation:
 		return openfeature.DisabledReason
-	case model.EvaluationReasonPrerequisite:
-		return openfeature.TargetingMatchReason
 	default:
-		return openfeature.UnknownReason
+		return openfeature.Reason(reason)
 	}
 }
 

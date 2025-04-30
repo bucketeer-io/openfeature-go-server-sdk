@@ -617,7 +617,7 @@ func TestConvertReason(t *testing.T) {
 		{
 			desc:            "rule reason",
 			bucketeerReason: model.EvaluationReasonRule,
-			expectedReason:  openfeature.TargetingMatchReason,
+			expectedReason:  openfeature.Reason(model.EvaluationReasonRule),
 		},
 		{
 			desc:            "default reason",
@@ -642,7 +642,7 @@ func TestConvertReason(t *testing.T) {
 		{
 			desc:            "unknown reason",
 			bucketeerReason: model.EvaluationReason("UNKNOWN"),
-			expectedReason:  openfeature.UnknownReason,
+			expectedReason:  openfeature.Reason("UNKNOWN"),
 		},
 	}
 
