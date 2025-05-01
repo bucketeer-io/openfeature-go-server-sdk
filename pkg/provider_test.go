@@ -520,18 +520,21 @@ func TestObjectEvaluation(t *testing.T) {
 func TestToBucketeerUser(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		desc        string
-		evalCtx     openfeature.FlattenedContext
-		expectedID  string
-		expectedErr error
+		desc                string
+		evalCtx             openfeature.FlattenedContext
+		expectedID          string
+		expectedErr         error
+		expectedErrContains string
+		expectedData        map[string]string
 	}{
 		{
 			desc: "valid targeting key",
 			evalCtx: openfeature.FlattenedContext{
 				openfeature.TargetingKey: "test-user",
 			},
-			expectedID:  "test-user",
-			expectedErr: nil,
+			expectedID:   "test-user",
+			expectedErr:  nil,
+			expectedData: map[string]string{},
 		},
 		{
 			desc: "valid targeting key and valid data",
@@ -542,34 +545,59 @@ func TestToBucketeerUser(t *testing.T) {
 			},
 			expectedID:  "test-user",
 			expectedErr: nil,
+			expectedData: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+			},
 		},
 		{
 			desc: "invalid targeting key type",
 			evalCtx: openfeature.FlattenedContext{
 				openfeature.TargetingKey: 123,
 			},
-			expectedID:  "",
 			expectedErr: errors.New(`TARGETING_KEY_MISSING: key "targetingKey", value '{' can not be converted to string`),
 		},
 		{
 			desc:        "empty context",
 			evalCtx:     openfeature.FlattenedContext{},
-			expectedID:  "",
 			expectedErr: errors.New("TARGETING_KEY_MISSING: evalCtx is empty"),
+		},
+		{
+			desc: "valid json",
+			evalCtx: openfeature.FlattenedContext{
+				openfeature.TargetingKey: "test-user",
+				"json":                   `{"key1": "value1", "key2": "value2"}`,
+				"number":                 123,
+			},
+			expectedID: "test-user",
+			expectedData: map[string]string{
+				"json":   `{"key1": "value1", "key2": "value2"}`,
+				"number": `123`,
+			},
+		},
+		{
+			desc: "json marshal error",
+			evalCtx: openfeature.FlattenedContext{
+				openfeature.TargetingKey: "test-user",
+				"fn":                     func() {},
+			},
+			expectedErrContains: `cannot be converted to JSON string: json: unsupported type: func()`,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-
+			t.Parallel()
 			bucketeerUser, err := toBucketeerUser(test.evalCtx)
-
 			if test.expectedErr != nil {
 				assert.NotNil(t, err)
-				assert.Equal(t, test.expectedErr.Error(), err.Error())
+				assert.Error(t, test.expectedErr, err)
+			} else if test.expectedErrContains != "" {
+				assert.ErrorContains(t, err, test.expectedErrContains)
 			} else {
 				assert.Nil(t, err)
-				assert.Equal(t, test.expectedID, bucketeerUser.ID)
+				assert.Equal(t, bucketeerUser.ID, test.expectedID)
+				assert.Equal(t, bucketeerUser.Data, test.expectedData)
 			}
 		})
 	}

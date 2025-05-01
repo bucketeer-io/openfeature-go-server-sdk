@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/bucketeer-io/go-server-sdk/pkg/bucketeer"
@@ -273,15 +274,18 @@ func toBucketeerUser(evalCtx openfeature.FlattenedContext) (user.User, *openfeat
 			}
 			bucketeerUser.ID = valStr
 		default:
-			valStr, ok := val.(string)
-			if !ok {
-				return user.User{},
-					ToPtr(openfeature.NewParseErrorResolutionError(
-						fmt.Sprintf("key %q, value %q can not be converted to string", key, val),
-					),
-					)
+			switch v := val.(type) {
+			case string:
+				bucketeerUser.Data[key] = v
+			default:
+				jsonBytes, err := json.Marshal(v)
+				if err != nil {
+					return user.User{}, ToPtr(openfeature.NewParseErrorResolutionError(
+						fmt.Sprintf("key %q, value %v cannot be converted to JSON string: %v", key, val, err),
+					))
+				}
+				bucketeerUser.Data[key] = string(jsonBytes)
 			}
-			bucketeerUser.Data[key] = valStr
 		}
 	}
 
