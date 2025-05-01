@@ -17,7 +17,10 @@
     "pull-request-title-pattern": "chore: release v${version}",
     "packages": {
       ".": {
-        "changelog-path": "CHANGELOG.md"
+        "changelog-path": "CHANGELOG.md",
+        "extra-files": [
+          "pkg/version/version.go"
+        ]
       }
     },
     "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
