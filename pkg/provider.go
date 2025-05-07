@@ -299,7 +299,7 @@ func toBucketeerUser(evalCtx openfeature.FlattenedContext) (user.User, *openfeat
 			if !ok {
 				return user.User{},
 					ToPtr(openfeature.NewTargetingKeyMissingResolutionError(
-						fmt.Sprintf("key %q, value %q can not be converted to string", key, val),
+						fmt.Sprintf("key %q, value %v can not be converted to string", key, val),
 					),
 					)
 			}
