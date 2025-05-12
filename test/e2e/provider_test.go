@@ -3,8 +3,6 @@ package e2e
 import (
 	"context"
 	"os"
-	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -42,27 +40,13 @@ func setupProvider(t *testing.T) *provider.Provider {
 	host := apiEndpoint
 	port := 443 // Default HTTPS port
 
-	// If endpoint contains port, parse it
-	if strings.Contains(apiEndpoint, ":") {
-		parts := strings.Split(apiEndpoint, ":")
-		host = parts[0]
-		portStr := parts[1]
-
-		// Convert port string to integer
-		var err error
-		port, err = strconv.Atoi(portStr)
-		if err != nil {
-			t.Fatalf("Invalid port number: %s, error: %v", portStr, err)
-		}
-	}
-
 	options := []bucketeer.Option{
 		bucketeer.WithAPIKey(apiKey),
 		bucketeer.WithHost(host),
 		bucketeer.WithPort(port),
 	}
 
-	tag := getEnvOrDefault("TAG", "e2e-test-tag")
+	tag := getEnvOrDefault("TAG", "go-server")
 	options = append(options, bucketeer.WithTag(tag))
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
