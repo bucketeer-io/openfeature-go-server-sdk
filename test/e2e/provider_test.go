@@ -78,7 +78,7 @@ func setupProvider(t *testing.T) openfeature.FeatureProvider {
 
 // createEvalContext creates an evaluation context for the given user ID
 func createEvalContext(userID string) openfeature.FlattenedContext {
-	evalCtx := map[string]interface{}{
+	evalCtx := map[string]any{
 		openfeature.TargetingKey: userID,
 	}
 
@@ -92,24 +92,28 @@ func createEvalContext(userID string) openfeature.FlattenedContext {
 
 func TestBooleanEvaluation(t *testing.T) {
 	t.Parallel()
-
+	ctx, cancel := context.WithTimeout(t.Context(), timeout)
+	defer cancel()
 	tests := []struct {
 		desc         string
 		userID       string
 		flagID       string
 		defaultValue bool
+		expected     bool
 	}{
 		{
 			desc:         "Evaluation by default user",
 			userID:       "test-user-1",
 			flagID:       getEnvOrDefault("BOOLEAN_FLAG_ID", "test-boolean-flag"),
 			defaultValue: false,
+			expected:     true,
 		},
 		{
 			desc:         "Evaluation by target user",
 			userID:       "target-user",
 			flagID:       getEnvOrDefault("BOOLEAN_FLAG_ID", "test-boolean-flag"),
 			defaultValue: false,
+			expected:     true,
 		},
 	}
 
@@ -117,39 +121,41 @@ func TestBooleanEvaluation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
-			defer cancel()
-
+			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
 			result := provider.BooleanEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
 
-			// Verify result is valid and not the default value
+			// Verify result is valid and matches expected value
 			assert.NotNil(t, result)
-			assert.NotEqual(t, tt.defaultValue, result.Value, "Flag evaluation should not return the default value")
+			assert.Equal(t, tt.expected, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
 		})
 	}
 }
 
 func TestStringEvaluation(t *testing.T) {
 	t.Parallel()
-
+	ctx, cancel := context.WithTimeout(t.Context(), timeout)
+	defer cancel()
 	tests := []struct {
 		desc         string
 		userID       string
 		flagID       string
 		defaultValue string
+		expected     string
 	}{
 		{
 			desc:         "Evaluation by default user",
 			userID:       "test-user-2",
 			flagID:       getEnvOrDefault("STRING_FLAG_ID", "test-string-flag"),
 			defaultValue: "default-value",
+			expected:     "variation-1",
 		},
 		{
 			desc:         "Evaluation by target user",
 			userID:       "target-user",
 			flagID:       getEnvOrDefault("STRING_FLAG_ID", "test-string-flag"),
 			defaultValue: "default-value",
+			expected:     "target-variation",
 		},
 	}
 
@@ -157,38 +163,40 @@ func TestStringEvaluation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
-			defer cancel()
-
+			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
 			result := provider.StringEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
 
 			assert.NotNil(t, result)
-			assert.NotEqual(t, tt.defaultValue, result.Value, "Flag evaluation should not return the default value")
+			assert.Equal(t, tt.expected, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
 		})
 	}
 }
 
 func TestIntEvaluation(t *testing.T) {
 	t.Parallel()
-
+	ctx, cancel := context.WithTimeout(t.Context(), timeout)
+	defer cancel()
 	tests := []struct {
 		desc         string
 		userID       string
 		flagID       string
 		defaultValue int64
+		expected     int64
 	}{
 		{
 			desc:         "Evaluation by default user",
 			userID:       "test-user-3",
 			flagID:       getEnvOrDefault("INT_FLAG_ID", "test-int-flag"),
 			defaultValue: 0,
+			expected:     100,
 		},
 		{
 			desc:         "Evaluation by target user",
 			userID:       "target-user",
 			flagID:       getEnvOrDefault("INT_FLAG_ID", "test-int-flag"),
 			defaultValue: 0,
+			expected:     200,
 		},
 	}
 
@@ -196,38 +204,40 @@ func TestIntEvaluation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
-			defer cancel()
-
+			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
 			result := provider.IntEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
 
 			assert.NotNil(t, result)
-			assert.NotEqual(t, tt.defaultValue, result.Value, "Flag evaluation should not return the default value")
+			assert.Equal(t, tt.expected, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
 		})
 	}
 }
 
 func TestFloatEvaluation(t *testing.T) {
 	t.Parallel()
-
+	ctx, cancel := context.WithTimeout(t.Context(), timeout)
+	defer cancel()
 	tests := []struct {
 		desc         string
 		userID       string
 		flagID       string
 		defaultValue float64
+		expected     float64
 	}{
 		{
 			desc:         "Evaluation by default user",
 			userID:       "test-user-4",
 			flagID:       getEnvOrDefault("FLOAT_FLAG_ID", "test-float-flag"),
 			defaultValue: 0.0,
+			expected:     1.1,
 		},
 		{
 			desc:         "Evaluation by target user",
 			userID:       "target-user",
 			flagID:       getEnvOrDefault("FLOAT_FLAG_ID", "test-float-flag"),
 			defaultValue: 0.0,
+			expected:     2.2,
 		},
 	}
 
@@ -235,26 +245,26 @@ func TestFloatEvaluation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
-			defer cancel()
-
+			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
 			result := provider.FloatEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
 
 			assert.NotNil(t, result)
-			assert.NotEqual(t, tt.defaultValue, result.Value, "Flag evaluation should not return the default value")
+			assert.Equal(t, tt.expected, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
 		})
 	}
 }
 
 func TestObjectEvaluation(t *testing.T) {
 	t.Parallel()
-
+	ctx, cancel := context.WithTimeout(t.Context(), timeout)
+	defer cancel()
 	tests := []struct {
 		desc         string
 		userID       string
 		flagID       string
 		defaultValue interface{}
+		expected     interface{}
 	}{
 		{
 			desc:   "Evaluation by default user",
@@ -263,6 +273,10 @@ func TestObjectEvaluation(t *testing.T) {
 			defaultValue: map[string]interface{}{
 				"name":  "default-object",
 				"value": 0,
+			},
+			expected: map[string]interface{}{
+				"name":  "variation-1",
+				"value": 1,
 			},
 		},
 		{
@@ -273,6 +287,10 @@ func TestObjectEvaluation(t *testing.T) {
 				"name":  "default-object",
 				"value": 0,
 			},
+			expected: map[string]interface{}{
+				"name":  "target-variation",
+				"value": 2,
+			},
 		},
 	}
 
@@ -280,14 +298,12 @@ func TestObjectEvaluation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
-			defer cancel()
-
+			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
 			result := provider.ObjectEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
 
 			assert.NotNil(t, result)
-			assert.NotNil(t, result.Value, "Flag evaluation should return a value")
+			assert.Equal(t, tt.expected, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
 		})
 	}
 }
