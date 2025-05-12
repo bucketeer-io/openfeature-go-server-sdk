@@ -28,7 +28,7 @@ func getEnvOrDefault(key, defaultValue string) string {
 }
 
 // setupProvider creates a provider for testing
-func setupProvider(t *testing.T) openfeature.FeatureProvider {
+func setupProvider(t *testing.T) *provider.Provider {
 	// Get environment variables from GitHub Actions workflow
 	apiKey := getEnvOrDefault("API_KEY", "")
 	apiEndpoint := getEnvOrDefault("API_ENDPOINT", "")
