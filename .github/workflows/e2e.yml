@@ -25,4 +25,4 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
       - name: E2E Test
-        run: API_KEY=${{ secrets.API_KEY_FOR_E2E }} API_KEY_SERVER=${{ secrets.API_KEY_SERVER_FOR_E2E }} API_ENDPOINT=${{ secrets.API_ENDPOINT_FOR_E2E }} SCHEME=https make e2e
+        run: API_KEY=${{ secrets.API_KEY_FOR_E2E }} API_ENDPOINT=${{ secrets.API_ENDPOINT_FOR_E2E }} SCHEME=https make e2e
