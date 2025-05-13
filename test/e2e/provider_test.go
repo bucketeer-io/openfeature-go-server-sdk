@@ -44,6 +44,7 @@ func setupProvider(t *testing.T) *provider.Provider {
 		bucketeer.WithAPIKey(apiKey),
 		bucketeer.WithHost(host),
 		bucketeer.WithPort(port),
+		bucketeer.WithEnableDebugLog(true),
 	}
 
 	tag := getEnvOrDefault("TAG", "go-server")
