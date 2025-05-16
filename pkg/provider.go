@@ -8,6 +8,7 @@ import (
 	"github.com/bucketeer-io/go-server-sdk/pkg/bucketeer"
 	"github.com/bucketeer-io/go-server-sdk/pkg/bucketeer/model"
 	"github.com/bucketeer-io/go-server-sdk/pkg/bucketeer/user"
+	"github.com/bucketeer-io/openfeature-go-server-sdk/pkg/version"
 
 	"github.com/open-feature/go-sdk/openfeature"
 )
@@ -61,6 +62,8 @@ func NewProviderWithContext(
 	ctx context.Context,
 	opts ProviderOptions,
 ) (*Provider, error) {
+	opts = append(opts, bucketeer.WithWrapperSDKVersion(version.SDKVersion))
+	opts = append(opts, bucketeer.WithWrapperSourceID(sourceIDOpenFeatureGo.Int32()))
 	sdk, err := bucketeer.NewSDK(ctx, opts...)
 	if err != nil {
 		return nil, err
