@@ -15,9 +15,9 @@ import (
 
 // newTestProvider is a helper function that creates a Provider with a mock SDK for testing
 func newTestProvider(mockSDK BucketeerSDK) *Provider {
-	provider, _ := NewProvider(ProviderOptions{})
-	provider.sdk = mockSDK
-	return provider
+	return &Provider{
+		sdk: mockSDK,
+	}
 }
 
 // mockBucketeerSDK implements BucketeerSDK interface for testing
