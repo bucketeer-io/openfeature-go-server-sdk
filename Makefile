@@ -34,3 +34,7 @@ build:
 test:
 	go test -v -race ./pkg/...
 
+.PHONY: e2e
+e2e:
+	go test -v -race ./test/e2e/...
+
