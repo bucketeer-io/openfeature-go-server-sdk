@@ -47,6 +47,7 @@ type BucketeerSDK interface {
 		featureID string,
 		defaultValue interface{},
 	) model.BKTEvaluationDetails[interface{}]
+	Close(ctx context.Context) error
 }
 
 type ProviderOptions []bucketeer.Option
@@ -296,6 +297,11 @@ func toBucketeerUser(evalCtx openfeature.FlattenedContext) (user.User, *openfeat
 	}
 
 	return bucketeerUser, nil
+}
+
+// Shutdown closes the SDK
+func (p *Provider) Shutdown() {
+	p.sdk.Close(context.Background())
 }
 
 func ToPtr[T any](v T) *T {
