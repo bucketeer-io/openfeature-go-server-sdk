@@ -88,20 +88,23 @@ func (p *Provider) Metadata() openfeature.Metadata {
 func convertReason(reason model.EvaluationReason) openfeature.Reason {
 	switch reason {
 	case model.EvaluationReasonTarget,
-		model.EvaluationReasonPrerequisite:
+		model.EvaluationReasonPrerequisite,
+		model.EvaluationReasonRule:
 		return openfeature.TargetingMatchReason
-	case model.EvaluationReasonRule:
-		return openfeature.Reason(reason)
 	case model.EvaluationReasonDefault:
 		return openfeature.DefaultReason
-	// TODO: Remove ReasonClient
-	// nolint:staticcheck
-	case model.EvaluationReasonClient:
-		return openfeature.StaticReason
 	case model.EvaluationReasonOffVariation:
 		return openfeature.DisabledReason
+	case model.EvaluationReasonErrorNoEvaluations,
+		model.EvaluationReasonErrorFlagNotFound,
+		model.EvaluationReasonErrorWrongType,
+		model.EvaluationReasonErrorUserIDNotSpecified,
+		model.EvaluationReasonErrorFeatureFlagIDNotSpecified,
+		model.EvaluationReasonErrorException,
+		model.EvaluationReasonErrorCacheNotFound:
+		return openfeature.ErrorReason
 	default:
-		return openfeature.Reason(reason)
+		return openfeature.UnknownReason
 	}
 }
 

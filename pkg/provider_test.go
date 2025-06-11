@@ -634,17 +634,12 @@ func TestConvertReason(t *testing.T) {
 		{
 			desc:            "rule reason",
 			bucketeerReason: model.EvaluationReasonRule,
-			expectedReason:  openfeature.Reason(model.EvaluationReasonRule),
+			expectedReason:  openfeature.TargetingMatchReason,
 		},
 		{
 			desc:            "default reason",
 			bucketeerReason: model.EvaluationReasonDefault,
 			expectedReason:  openfeature.DefaultReason,
-		},
-		{
-			desc:            "client reason",
-			bucketeerReason: model.EvaluationReasonClient,
-			expectedReason:  openfeature.StaticReason,
 		},
 		{
 			desc:            "off variation reason",
@@ -657,9 +652,44 @@ func TestConvertReason(t *testing.T) {
 			expectedReason:  openfeature.TargetingMatchReason,
 		},
 		{
+			desc:            "error no evaluations reason",
+			bucketeerReason: model.EvaluationReasonErrorNoEvaluations,
+			expectedReason:  openfeature.ErrorReason,
+		},
+		{
+			desc:            "error flag not found reason",
+			bucketeerReason: model.EvaluationReasonErrorFlagNotFound,
+			expectedReason:  openfeature.ErrorReason,
+		},
+		{
+			desc:            "error wrong type reason",
+			bucketeerReason: model.EvaluationReasonErrorWrongType,
+			expectedReason:  openfeature.ErrorReason,
+		},
+		{
+			desc:            "error user id not specified reason",
+			bucketeerReason: model.EvaluationReasonErrorUserIDNotSpecified,
+			expectedReason:  openfeature.ErrorReason,
+		},
+		{
+			desc:            "error feature flag id not specified reason",
+			bucketeerReason: model.EvaluationReasonErrorFeatureFlagIDNotSpecified,
+			expectedReason:  openfeature.ErrorReason,
+		},
+		{
+			desc:            "error exception reason",
+			bucketeerReason: model.EvaluationReasonErrorException,
+			expectedReason:  openfeature.ErrorReason,
+		},
+		{
+			desc:            "error cache not found reason",
+			bucketeerReason: model.EvaluationReasonErrorCacheNotFound,
+			expectedReason:  openfeature.ErrorReason,
+		},
+		{
 			desc:            "unknown reason",
 			bucketeerReason: model.EvaluationReason("UNKNOWN"),
-			expectedReason:  openfeature.Reason("UNKNOWN"),
+			expectedReason:  openfeature.UnknownReason,
 		},
 	}
 
