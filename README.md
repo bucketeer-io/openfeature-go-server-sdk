@@ -35,7 +35,7 @@ Bucketeer provider needs to be created and then set in the global OpenFeatureAPI
 import (
 	"context"
 	"github.com/bucketeer-io/go-server-sdk/pkg/bucketeer"
-	"github.com/bucketeer-io/openfeature-go-server-sdk/pkg/provider"
+	provider "github.com/bucketeer-io/openfeature-go-server-sdk/pkg"
 	"github.com/open-feature/go-sdk/openfeature"
 )
 
@@ -61,13 +61,75 @@ func main() {
 		openfeature.TargetingKey: userID,
 		// Add other attributes as needed
 	}
-
 	// Evaluate feature flag
 	result := p.BooleanEvaluation(context.Background(), "feature-flag-id", false, evalCtx)
 	if result.Error() != nil {
 		// Handle error
 	}
 }
+```
+
+### Evaluate a feature flag
+
+The Bucketeer provider supports evaluating different types of feature flags. Each evaluation method returns a resolution detail object containing the evaluated value and additional metadata.
+
+#### Boolean Evaluation
+
+```go
+result := p.BooleanEvaluation(context.Background(), "bool-feature-flag", false, evalCtx)
+if result.Error() != nil {
+    // Handle error
+}
+// Access the evaluated value
+boolValue := result.Value
+```
+
+#### String Evaluation
+
+```go
+result := p.StringEvaluation(context.Background(), "string-feature-flag", "default-value", evalCtx)
+if result.Error() != nil {
+    // Handle error
+}
+// Access the evaluated value and variant
+stringValue := result.Value
+variant := result.Variant
+```
+
+#### Integer Evaluation
+
+```go
+result := p.IntEvaluation(context.Background(), "int-feature-flag", 100, evalCtx)
+if result.Error() != nil {
+    // Handle error
+}
+// Access the evaluated value
+intValue := result.Value
+```
+
+#### Float Evaluation
+
+```go
+result := p.FloatEvaluation(context.Background(), "float-feature-flag", 3.14, evalCtx)
+if result.Error() != nil {
+    // Handle error
+}
+// Access the evaluated value
+floatValue := result.Value
+```
+
+#### Object Evaluation
+
+```go
+defaultObject := map[string]interface{}{
+    "key": "default-value",
+}
+result := p.ObjectEvaluation(context.Background(), "object-feature-flag", defaultObject, evalCtx)
+if result.Error() != nil {
+    // Handle error
+}
+// Access the evaluated value
+objectValue := result.Value
 ```
 
 See our [documentation](https://docs.bucketeer.io/sdk/server-side/go) for more SDK configuration.
