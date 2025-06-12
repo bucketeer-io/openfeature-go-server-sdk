@@ -95,16 +95,27 @@ func convertReason(reason model.EvaluationReason) openfeature.Reason {
 		return openfeature.DefaultReason
 	case model.EvaluationReasonOffVariation:
 		return openfeature.DisabledReason
-	case model.EvaluationReasonErrorNoEvaluations,
-		model.EvaluationReasonErrorFlagNotFound,
-		model.EvaluationReasonErrorWrongType,
-		model.EvaluationReasonErrorUserIDNotSpecified,
-		model.EvaluationReasonErrorFeatureFlagIDNotSpecified,
-		model.EvaluationReasonErrorException,
-		model.EvaluationReasonErrorCacheNotFound:
-		return openfeature.ErrorReason
 	default:
-		return openfeature.UnknownReason
+		return openfeature.Reason(reason)
+	}
+}
+
+// getEvaluationError returns a resolution error if the evaluation reason is an error
+func getEvaluationError(reason model.EvaluationReason) openfeature.ResolutionError {
+	switch reason {
+	case model.EvaluationReasonErrorFlagNotFound:
+		return openfeature.NewFlagNotFoundResolutionError(string(reason))
+	case model.EvaluationReasonErrorWrongType:
+		return openfeature.NewTypeMismatchResolutionError(string(reason))
+	case model.EvaluationReasonErrorUserIDNotSpecified:
+		return openfeature.NewTargetingKeyMissingResolutionError(string(reason))
+	case model.EvaluationReasonErrorFeatureFlagIDNotSpecified,
+		model.EvaluationReasonErrorNoEvaluations,
+		model.EvaluationReasonErrorCacheNotFound,
+		model.EvaluationReasonErrorException:
+		return openfeature.NewGeneralResolutionError(string(reason))
+	default:
+		return openfeature.ResolutionError{}
 	}
 }
 
@@ -131,7 +142,9 @@ func (p *Provider) BooleanEvaluation(
 	return openfeature.BoolResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-			Reason: convertReason(evaluation.Reason),
+			Reason:          convertReason(evaluation.Reason),
+			Variant:         evaluation.VariationName,
+			ResolutionError: getEvaluationError(evaluation.Reason),
 		},
 	}
 }
@@ -159,8 +172,9 @@ func (p *Provider) StringEvaluation(
 	return openfeature.StringResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-			Reason:  convertReason(evaluation.Reason),
-			Variant: evaluation.VariationName,
+			Reason:          convertReason(evaluation.Reason),
+			Variant:         evaluation.VariationName,
+			ResolutionError: getEvaluationError(evaluation.Reason),
 		},
 	}
 }
@@ -188,8 +202,9 @@ func (p *Provider) FloatEvaluation(
 	return openfeature.FloatResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-			Reason:  convertReason(evaluation.Reason),
-			Variant: evaluation.VariationName,
+			Reason:          convertReason(evaluation.Reason),
+			Variant:         evaluation.VariationName,
+			ResolutionError: getEvaluationError(evaluation.Reason),
 		},
 	}
 }
@@ -217,8 +232,9 @@ func (p *Provider) IntEvaluation(
 	return openfeature.IntResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-			Reason:  convertReason(evaluation.Reason),
-			Variant: evaluation.VariationName,
+			Reason:          convertReason(evaluation.Reason),
+			Variant:         evaluation.VariationName,
+			ResolutionError: getEvaluationError(evaluation.Reason),
 		},
 	}
 }
@@ -246,8 +262,9 @@ func (p *Provider) ObjectEvaluation(
 	return openfeature.InterfaceResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-			Reason:  convertReason(evaluation.Reason),
-			Variant: evaluation.VariationName,
+			Reason:          convertReason(evaluation.Reason),
+			Variant:         evaluation.VariationName,
+			ResolutionError: getEvaluationError(evaluation.Reason),
 		},
 	}
 }

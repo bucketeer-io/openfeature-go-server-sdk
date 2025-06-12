@@ -77,16 +77,17 @@ func (m *mockBucketeerSDK) ObjectVariationDetails(
 func TestBooleanEvaluation(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		desc                string
-		flagKey             string
-		targetKey           string
-		evalCtx             map[string]interface{}
-		mockSDK             *mockBucketeerSDK
-		defaultValue        bool
-		expectedValue       bool
-		expectedReason      openfeature.Reason
-		failToBucketeerUser bool
-		boolEvaluation      model.BKTEvaluationDetails[bool]
+		desc                    string
+		flagKey                 string
+		targetKey               string
+		evalCtx                 map[string]interface{}
+		mockSDK                 *mockBucketeerSDK
+		defaultValue            bool
+		expectedValue           bool
+		expectedReason          openfeature.Reason
+		expectedResolutionError openfeature.ResolutionError
+		failToBucketeerUser     bool
+		boolEvaluation          model.BKTEvaluationDetails[bool]
 	}{
 		{
 			desc:      "successful boolean evaluation",
@@ -106,10 +107,11 @@ func TestBooleanEvaluation(t *testing.T) {
 					VariationValue: true,
 				},
 			},
-			defaultValue:        false,
-			expectedValue:       true,
-			expectedReason:      openfeature.TargetingMatchReason,
-			failToBucketeerUser: false,
+			defaultValue:            false,
+			expectedValue:           true,
+			expectedReason:          openfeature.TargetingMatchReason,
+			expectedResolutionError: openfeature.ResolutionError{},
+			failToBucketeerUser:     false,
 			boolEvaluation: model.BKTEvaluationDetails[bool]{
 				FeatureID:      "bool-flag",
 				UserID:         "test-user",
@@ -138,10 +140,11 @@ func TestBooleanEvaluation(t *testing.T) {
 					VariationValue: true,
 				},
 			},
-			defaultValue:        false,
-			expectedValue:       false,
-			expectedReason:      openfeature.ErrorReason,
-			failToBucketeerUser: false,
+			defaultValue:            false,
+			expectedValue:           false,
+			expectedReason:          openfeature.ErrorReason,
+			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value '{' can not be converted to string`),
+			failToBucketeerUser:     false,
 			boolEvaluation: model.BKTEvaluationDetails[bool]{
 				FeatureID:      "bool-flag",
 				UserID:         "test-user",
@@ -150,6 +153,105 @@ func TestBooleanEvaluation(t *testing.T) {
 				FeatureVersion: 1,
 				Reason:         model.EvaluationReasonTarget,
 				VariationValue: true,
+			},
+		},
+		{
+			desc:      "flag not found error",
+			flagKey:   "bool-flag",
+			targetKey: "test-user",
+			evalCtx: map[string]interface{}{
+				openfeature.TargetingKey: "test-user",
+			},
+			mockSDK: &mockBucketeerSDK{
+				boolEvaluation: model.BKTEvaluationDetails[bool]{
+					FeatureID:      "bool-flag",
+					UserID:         "test-user",
+					VariationID:    "",
+					VariationName:  "",
+					FeatureVersion: 0,
+					Reason:         model.EvaluationReasonErrorFlagNotFound,
+					VariationValue: false,
+				},
+			},
+			defaultValue:            false,
+			expectedValue:           false,
+			expectedReason:          openfeature.Reason(model.EvaluationReasonErrorFlagNotFound),
+			expectedResolutionError: openfeature.NewFlagNotFoundResolutionError(string(model.EvaluationReasonErrorFlagNotFound)),
+			failToBucketeerUser:     false,
+			boolEvaluation: model.BKTEvaluationDetails[bool]{
+				FeatureID:      "bool-flag",
+				UserID:         "test-user",
+				VariationID:    "",
+				VariationName:  "",
+				FeatureVersion: 0,
+				Reason:         model.EvaluationReasonErrorFlagNotFound,
+				VariationValue: false,
+			},
+		},
+		{
+			desc:      "wrong type error",
+			flagKey:   "bool-flag",
+			targetKey: "test-user",
+			evalCtx: map[string]interface{}{
+				openfeature.TargetingKey: "test-user",
+			},
+			mockSDK: &mockBucketeerSDK{
+				boolEvaluation: model.BKTEvaluationDetails[bool]{
+					FeatureID:      "bool-flag",
+					UserID:         "test-user",
+					VariationID:    "variation-1",
+					VariationName:  "wrong-type",
+					FeatureVersion: 1,
+					Reason:         model.EvaluationReasonErrorWrongType,
+					VariationValue: false,
+				},
+			},
+			defaultValue:            false,
+			expectedValue:           false,
+			expectedReason:          openfeature.Reason(model.EvaluationReasonErrorWrongType),
+			expectedResolutionError: openfeature.NewTypeMismatchResolutionError(string(model.EvaluationReasonErrorWrongType)),
+			failToBucketeerUser:     false,
+			boolEvaluation: model.BKTEvaluationDetails[bool]{
+				FeatureID:      "bool-flag",
+				UserID:         "test-user",
+				VariationID:    "variation-1",
+				VariationName:  "wrong-type",
+				FeatureVersion: 1,
+				Reason:         model.EvaluationReasonErrorWrongType,
+				VariationValue: false,
+			},
+		},
+		{
+			desc:      "general error",
+			flagKey:   "bool-flag",
+			targetKey: "test-user",
+			evalCtx: map[string]interface{}{
+				openfeature.TargetingKey: "test-user",
+			},
+			mockSDK: &mockBucketeerSDK{
+				boolEvaluation: model.BKTEvaluationDetails[bool]{
+					FeatureID:      "bool-flag",
+					UserID:         "test-user",
+					VariationID:    "",
+					VariationName:  "",
+					FeatureVersion: 0,
+					Reason:         model.EvaluationReasonErrorException,
+					VariationValue: false,
+				},
+			},
+			defaultValue:            false,
+			expectedValue:           false,
+			expectedReason:          openfeature.Reason(model.EvaluationReasonErrorException),
+			expectedResolutionError: openfeature.NewGeneralResolutionError(string(model.EvaluationReasonErrorException)),
+			failToBucketeerUser:     false,
+			boolEvaluation: model.BKTEvaluationDetails[bool]{
+				FeatureID:      "bool-flag",
+				UserID:         "test-user",
+				VariationID:    "",
+				VariationName:  "",
+				FeatureVersion: 0,
+				Reason:         model.EvaluationReasonErrorException,
+				VariationValue: false,
 			},
 		},
 	}
@@ -173,6 +275,7 @@ func TestBooleanEvaluation(t *testing.T) {
 
 			assert.Equal(t, test.expectedValue, result.Value)
 			assert.Equal(t, test.expectedReason, result.Reason)
+			assert.Equal(t, test.expectedResolutionError, result.ResolutionError)
 		})
 	}
 }
@@ -180,15 +283,16 @@ func TestBooleanEvaluation(t *testing.T) {
 func TestStringEvaluation(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		desc                string
-		flagKey             string
-		targetKey           string
-		evalCtx             map[string]interface{}
-		defaultValue        string
-		expectedValue       string
-		expectedReason      openfeature.Reason
-		stringEvaluation    model.BKTEvaluationDetails[string]
-		failToBucketeerUser bool
+		desc                    string
+		flagKey                 string
+		targetKey               string
+		evalCtx                 map[string]interface{}
+		defaultValue            string
+		expectedValue           string
+		expectedReason          openfeature.Reason
+		expectedResolutionError openfeature.ResolutionError
+		stringEvaluation        model.BKTEvaluationDetails[string]
+		failToBucketeerUser     bool
 	}{
 		{
 			desc:      "successful string evaluation",
@@ -197,10 +301,11 @@ func TestStringEvaluation(t *testing.T) {
 			evalCtx: map[string]interface{}{
 				openfeature.TargetingKey: "test-user",
 			},
-			defaultValue:        "default-value",
-			expectedValue:       "feature-enabled",
-			expectedReason:      openfeature.TargetingMatchReason,
-			failToBucketeerUser: false,
+			defaultValue:            "default-value",
+			expectedValue:           "feature-enabled",
+			expectedReason:          openfeature.TargetingMatchReason,
+			expectedResolutionError: openfeature.ResolutionError{},
+			failToBucketeerUser:     false,
 			stringEvaluation: model.BKTEvaluationDetails[string]{
 				FeatureID:      "string-flag",
 				UserID:         "test-user",
@@ -218,10 +323,11 @@ func TestStringEvaluation(t *testing.T) {
 			evalCtx: map[string]interface{}{
 				openfeature.TargetingKey: 123, // Invalid type to cause error
 			},
-			defaultValue:        "default-value",
-			expectedValue:       "default-value",
-			expectedReason:      openfeature.ErrorReason,
-			failToBucketeerUser: false,
+			defaultValue:            "default-value",
+			expectedValue:           "default-value",
+			expectedReason:          openfeature.ErrorReason,
+			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value '{' can not be converted to string`),
+			failToBucketeerUser:     false,
 			stringEvaluation: model.BKTEvaluationDetails[string]{
 				FeatureID:      "string-flag",
 				UserID:         "test-user",
@@ -230,6 +336,28 @@ func TestStringEvaluation(t *testing.T) {
 				FeatureVersion: 1,
 				Reason:         model.EvaluationReasonTarget,
 				VariationValue: "feature-enabled",
+			},
+		},
+		{
+			desc:      "flag not found error",
+			flagKey:   "string-flag",
+			targetKey: "test-user",
+			evalCtx: map[string]interface{}{
+				openfeature.TargetingKey: "test-user",
+			},
+			defaultValue:            "default-value",
+			expectedValue:           "default-value",
+			expectedReason:          openfeature.Reason(model.EvaluationReasonErrorFlagNotFound),
+			expectedResolutionError: openfeature.NewFlagNotFoundResolutionError(string(model.EvaluationReasonErrorFlagNotFound)),
+			failToBucketeerUser:     false,
+			stringEvaluation: model.BKTEvaluationDetails[string]{
+				FeatureID:      "string-flag",
+				UserID:         "test-user",
+				VariationID:    "",
+				VariationName:  "",
+				FeatureVersion: 0,
+				Reason:         model.EvaluationReasonErrorFlagNotFound,
+				VariationValue: "default-value",
 			},
 		},
 	}
@@ -255,6 +383,7 @@ func TestStringEvaluation(t *testing.T) {
 
 			assert.Equal(t, test.expectedValue, result.Value)
 			assert.Equal(t, test.expectedReason, result.Reason)
+			assert.Equal(t, test.expectedResolutionError, result.ResolutionError)
 		})
 	}
 }
@@ -262,15 +391,16 @@ func TestStringEvaluation(t *testing.T) {
 func TestIntEvaluation(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		desc                string
-		flagKey             string
-		targetKey           string
-		evalCtx             map[string]interface{}
-		defaultValue        int64
-		expectedValue       int64
-		expectedReason      openfeature.Reason
-		int64Evaluation     model.BKTEvaluationDetails[int64]
-		failToBucketeerUser bool
+		desc                    string
+		flagKey                 string
+		targetKey               string
+		evalCtx                 map[string]interface{}
+		defaultValue            int64
+		expectedValue           int64
+		expectedReason          openfeature.Reason
+		expectedResolutionError openfeature.ResolutionError
+		int64Evaluation         model.BKTEvaluationDetails[int64]
+		failToBucketeerUser     bool
 	}{
 		{
 			desc:      "successful int evaluation",
@@ -279,10 +409,11 @@ func TestIntEvaluation(t *testing.T) {
 			evalCtx: map[string]interface{}{
 				openfeature.TargetingKey: "test-user",
 			},
-			defaultValue:        0,
-			expectedValue:       42,
-			expectedReason:      openfeature.TargetingMatchReason,
-			failToBucketeerUser: false,
+			defaultValue:            0,
+			expectedValue:           42,
+			expectedReason:          openfeature.TargetingMatchReason,
+			expectedResolutionError: openfeature.ResolutionError{},
+			failToBucketeerUser:     false,
 			int64Evaluation: model.BKTEvaluationDetails[int64]{
 				FeatureID:      "int-flag",
 				UserID:         "test-user",
@@ -300,10 +431,11 @@ func TestIntEvaluation(t *testing.T) {
 			evalCtx: map[string]interface{}{
 				openfeature.TargetingKey: 123, // Invalid type to cause error
 			},
-			defaultValue:        0,
-			expectedValue:       0,
-			expectedReason:      openfeature.ErrorReason,
-			failToBucketeerUser: false,
+			defaultValue:            0,
+			expectedValue:           0,
+			expectedReason:          openfeature.ErrorReason,
+			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value '{' can not be converted to string`),
+			failToBucketeerUser:     false,
 			int64Evaluation: model.BKTEvaluationDetails[int64]{
 				FeatureID:      "int-flag",
 				UserID:         "test-user",
@@ -337,6 +469,7 @@ func TestIntEvaluation(t *testing.T) {
 
 			assert.Equal(t, test.expectedValue, result.Value)
 			assert.Equal(t, test.expectedReason, result.Reason)
+			assert.Equal(t, test.expectedResolutionError, result.ResolutionError)
 		})
 	}
 }
@@ -344,15 +477,16 @@ func TestIntEvaluation(t *testing.T) {
 func TestFloatEvaluation(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		desc                string
-		flagKey             string
-		targetKey           string
-		evalCtx             map[string]interface{}
-		defaultValue        float64
-		expectedValue       float64
-		expectedReason      openfeature.Reason
-		float64Evaluation   model.BKTEvaluationDetails[float64]
-		failToBucketeerUser bool
+		desc                    string
+		flagKey                 string
+		targetKey               string
+		evalCtx                 map[string]interface{}
+		defaultValue            float64
+		expectedValue           float64
+		expectedReason          openfeature.Reason
+		expectedResolutionError openfeature.ResolutionError
+		float64Evaluation       model.BKTEvaluationDetails[float64]
+		failToBucketeerUser     bool
 	}{
 		{
 			desc:      "successful float evaluation",
@@ -361,10 +495,11 @@ func TestFloatEvaluation(t *testing.T) {
 			evalCtx: map[string]interface{}{
 				openfeature.TargetingKey: "test-user",
 			},
-			defaultValue:        0.0,
-			expectedValue:       3.14,
-			expectedReason:      openfeature.TargetingMatchReason,
-			failToBucketeerUser: false,
+			defaultValue:            0.0,
+			expectedValue:           3.14,
+			expectedReason:          openfeature.TargetingMatchReason,
+			expectedResolutionError: openfeature.ResolutionError{},
+			failToBucketeerUser:     false,
 			float64Evaluation: model.BKTEvaluationDetails[float64]{
 				FeatureID:      "float-flag",
 				UserID:         "test-user",
@@ -382,10 +517,11 @@ func TestFloatEvaluation(t *testing.T) {
 			evalCtx: map[string]interface{}{
 				openfeature.TargetingKey: 123, // Invalid type to cause error
 			},
-			defaultValue:        0.0,
-			expectedValue:       0.0,
-			expectedReason:      openfeature.ErrorReason,
-			failToBucketeerUser: false,
+			defaultValue:            0.0,
+			expectedValue:           0.0,
+			expectedReason:          openfeature.ErrorReason,
+			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value '{' can not be converted to string`),
+			failToBucketeerUser:     false,
 			float64Evaluation: model.BKTEvaluationDetails[float64]{
 				FeatureID:      "float-flag",
 				UserID:         "test-user",
@@ -419,6 +555,7 @@ func TestFloatEvaluation(t *testing.T) {
 
 			assert.Equal(t, test.expectedValue, result.Value)
 			assert.Equal(t, test.expectedReason, result.Reason)
+			assert.Equal(t, test.expectedResolutionError, result.ResolutionError)
 		})
 	}
 }
@@ -426,15 +563,16 @@ func TestFloatEvaluation(t *testing.T) {
 func TestObjectEvaluation(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		desc                string
-		flagKey             string
-		targetKey           string
-		evalCtx             map[string]interface{}
-		defaultValue        interface{}
-		expectedValue       interface{}
-		expectedReason      openfeature.Reason
-		objectEvaluation    model.BKTEvaluationDetails[interface{}]
-		failToBucketeerUser bool
+		desc                    string
+		flagKey                 string
+		targetKey               string
+		evalCtx                 map[string]interface{}
+		defaultValue            interface{}
+		expectedValue           interface{}
+		expectedReason          openfeature.Reason
+		expectedResolutionError openfeature.ResolutionError
+		objectEvaluation        model.BKTEvaluationDetails[interface{}]
+		failToBucketeerUser     bool
 	}{
 		{
 			desc:      "successful object evaluation",
@@ -449,8 +587,9 @@ func TestObjectEvaluation(t *testing.T) {
 				"key2": 42,
 				"key3": true,
 			},
-			expectedReason:      openfeature.TargetingMatchReason,
-			failToBucketeerUser: false,
+			expectedReason:          openfeature.TargetingMatchReason,
+			expectedResolutionError: openfeature.ResolutionError{},
+			failToBucketeerUser:     false,
 			objectEvaluation: model.BKTEvaluationDetails[interface{}]{
 				FeatureID:      "object-flag",
 				UserID:         "test-user",
@@ -472,10 +611,11 @@ func TestObjectEvaluation(t *testing.T) {
 			evalCtx: map[string]interface{}{
 				openfeature.TargetingKey: 123, // Invalid type to cause error
 			},
-			defaultValue:        map[string]interface{}{"default": true},
-			expectedValue:       map[string]interface{}{"default": true},
-			expectedReason:      openfeature.ErrorReason,
-			failToBucketeerUser: false,
+			defaultValue:            map[string]interface{}{"default": true},
+			expectedValue:           map[string]interface{}{"default": true},
+			expectedReason:          openfeature.ErrorReason,
+			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value '{' can not be converted to string`),
+			failToBucketeerUser:     false,
 			objectEvaluation: model.BKTEvaluationDetails[interface{}]{
 				FeatureID:      "object-flag",
 				UserID:         "test-user",
@@ -513,6 +653,7 @@ func TestObjectEvaluation(t *testing.T) {
 
 			assert.Equal(t, test.expectedValue, result.Value)
 			assert.Equal(t, test.expectedReason, result.Reason)
+			assert.Equal(t, test.expectedResolutionError, result.ResolutionError)
 		})
 	}
 }
@@ -654,42 +795,42 @@ func TestConvertReason(t *testing.T) {
 		{
 			desc:            "error no evaluations reason",
 			bucketeerReason: model.EvaluationReasonErrorNoEvaluations,
-			expectedReason:  openfeature.ErrorReason,
+			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorNoEvaluations),
 		},
 		{
 			desc:            "error flag not found reason",
 			bucketeerReason: model.EvaluationReasonErrorFlagNotFound,
-			expectedReason:  openfeature.ErrorReason,
+			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorFlagNotFound),
 		},
 		{
 			desc:            "error wrong type reason",
 			bucketeerReason: model.EvaluationReasonErrorWrongType,
-			expectedReason:  openfeature.ErrorReason,
+			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorWrongType),
 		},
 		{
 			desc:            "error user id not specified reason",
 			bucketeerReason: model.EvaluationReasonErrorUserIDNotSpecified,
-			expectedReason:  openfeature.ErrorReason,
+			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorUserIDNotSpecified),
 		},
 		{
 			desc:            "error feature flag id not specified reason",
 			bucketeerReason: model.EvaluationReasonErrorFeatureFlagIDNotSpecified,
-			expectedReason:  openfeature.ErrorReason,
+			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorFeatureFlagIDNotSpecified),
 		},
 		{
 			desc:            "error exception reason",
 			bucketeerReason: model.EvaluationReasonErrorException,
-			expectedReason:  openfeature.ErrorReason,
+			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorException),
 		},
 		{
 			desc:            "error cache not found reason",
 			bucketeerReason: model.EvaluationReasonErrorCacheNotFound,
-			expectedReason:  openfeature.ErrorReason,
+			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorCacheNotFound),
 		},
 		{
 			desc:            "unknown reason",
 			bucketeerReason: model.EvaluationReason("UNKNOWN"),
-			expectedReason:  openfeature.UnknownReason,
+			expectedReason:  openfeature.Reason("UNKNOWN"),
 		},
 	}
 
@@ -698,6 +839,74 @@ func TestConvertReason(t *testing.T) {
 			t.Parallel()
 			actual := convertReason(test.bucketeerReason)
 			assert.Equal(t, test.expectedReason, actual)
+		})
+	}
+}
+
+func TestGetEvaluationError(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		desc                    string
+		evaluationReason        model.EvaluationReason
+		expectedResolutionError openfeature.ResolutionError
+	}{
+		{
+			desc:                    "no error for target reason",
+			evaluationReason:        model.EvaluationReasonTarget,
+			expectedResolutionError: openfeature.ResolutionError{},
+		},
+		{
+			desc:                    "no error for rule reason",
+			evaluationReason:        model.EvaluationReasonRule,
+			expectedResolutionError: openfeature.ResolutionError{},
+		},
+		{
+			desc:                    "no error for default reason",
+			evaluationReason:        model.EvaluationReasonDefault,
+			expectedResolutionError: openfeature.ResolutionError{},
+		},
+		{
+			desc:                    "flag not found error",
+			evaluationReason:        model.EvaluationReasonErrorFlagNotFound,
+			expectedResolutionError: openfeature.NewFlagNotFoundResolutionError(string(model.EvaluationReasonErrorFlagNotFound)),
+		},
+		{
+			desc:                    "wrong type error",
+			evaluationReason:        model.EvaluationReasonErrorWrongType,
+			expectedResolutionError: openfeature.NewTypeMismatchResolutionError(string(model.EvaluationReasonErrorWrongType)),
+		},
+		{
+			desc:                    "user id not specified error",
+			evaluationReason:        model.EvaluationReasonErrorUserIDNotSpecified,
+			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(string(model.EvaluationReasonErrorUserIDNotSpecified)),
+		},
+		{
+			desc:                    "feature flag id not specified error",
+			evaluationReason:        model.EvaluationReasonErrorFeatureFlagIDNotSpecified,
+			expectedResolutionError: openfeature.NewGeneralResolutionError(string(model.EvaluationReasonErrorFeatureFlagIDNotSpecified)),
+		},
+		{
+			desc:                    "no evaluations error",
+			evaluationReason:        model.EvaluationReasonErrorNoEvaluations,
+			expectedResolutionError: openfeature.NewGeneralResolutionError(string(model.EvaluationReasonErrorNoEvaluations)),
+		},
+		{
+			desc:                    "cache not found error",
+			evaluationReason:        model.EvaluationReasonErrorCacheNotFound,
+			expectedResolutionError: openfeature.NewGeneralResolutionError(string(model.EvaluationReasonErrorCacheNotFound)),
+		},
+		{
+			desc:                    "exception error",
+			evaluationReason:        model.EvaluationReasonErrorException,
+			expectedResolutionError: openfeature.NewGeneralResolutionError(string(model.EvaluationReasonErrorException)),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+			result := getEvaluationError(test.evaluationReason)
+			assert.Equal(t, test.expectedResolutionError, result)
 		})
 	}
 }
