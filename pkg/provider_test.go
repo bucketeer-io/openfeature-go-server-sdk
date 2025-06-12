@@ -241,7 +241,7 @@ func TestBooleanEvaluation(t *testing.T) {
 			},
 			defaultValue:            false,
 			expectedValue:           false,
-			expectedReason:          openfeature.Reason(model.EvaluationReasonErrorException),
+			expectedReason:          openfeature.ErrorReason,
 			expectedResolutionError: openfeature.NewGeneralResolutionError(string(model.EvaluationReasonErrorException)),
 			failToBucketeerUser:     false,
 			boolEvaluation: model.BKTEvaluationDetails[bool]{
@@ -795,7 +795,7 @@ func TestConvertReason(t *testing.T) {
 		{
 			desc:            "error no evaluations reason",
 			bucketeerReason: model.EvaluationReasonErrorNoEvaluations,
-			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorNoEvaluations),
+			expectedReason:  openfeature.ErrorReason,
 		},
 		{
 			desc:            "error flag not found reason",
@@ -815,17 +815,17 @@ func TestConvertReason(t *testing.T) {
 		{
 			desc:            "error feature flag id not specified reason",
 			bucketeerReason: model.EvaluationReasonErrorFeatureFlagIDNotSpecified,
-			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorFeatureFlagIDNotSpecified),
+			expectedReason:  openfeature.ErrorReason,
 		},
 		{
 			desc:            "error exception reason",
 			bucketeerReason: model.EvaluationReasonErrorException,
-			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorException),
+			expectedReason:  openfeature.ErrorReason,
 		},
 		{
 			desc:            "error cache not found reason",
 			bucketeerReason: model.EvaluationReasonErrorCacheNotFound,
-			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorCacheNotFound),
+			expectedReason:  openfeature.ErrorReason,
 		},
 		{
 			desc:            "unknown reason",

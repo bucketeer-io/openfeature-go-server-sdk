@@ -95,6 +95,11 @@ func convertReason(reason model.EvaluationReason) openfeature.Reason {
 		return openfeature.DefaultReason
 	case model.EvaluationReasonOffVariation:
 		return openfeature.DisabledReason
+	case model.EvaluationReasonErrorFeatureFlagIDNotSpecified,
+		model.EvaluationReasonErrorNoEvaluations,
+		model.EvaluationReasonErrorCacheNotFound,
+		model.EvaluationReasonErrorException:
+		return openfeature.ErrorReason
 	default:
 		return openfeature.Reason(reason)
 	}
