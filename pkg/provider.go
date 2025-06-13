@@ -16,6 +16,8 @@ import (
 
 var _ openfeature.FeatureProvider = (*Provider)(nil)
 
+//go:generate mockgen -source=provider.go -destination=mocks/mock_bucketeer_sdk.go -package=mocks BucketeerSDK
+
 type BucketeerSDK interface {
 	BoolVariationDetails(
 		ctx context.Context,

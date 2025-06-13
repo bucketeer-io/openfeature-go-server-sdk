@@ -34,3 +34,8 @@ build:
 test:
 	go test -v -race ./pkg/...
 
+.PHONY: mockgen
+mockgen:
+	go generate -run="mockgen" ./pkg/...
+	make fmt
+

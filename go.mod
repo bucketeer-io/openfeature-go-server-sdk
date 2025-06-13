@@ -6,6 +6,7 @@ require (
 	github.com/bucketeer-io/go-server-sdk v1.5.6-0.20250611082159-ea1d748fddf8
 	github.com/open-feature/go-sdk v1.14.1
 	github.com/stretchr/testify v1.10.0
+	go.uber.org/mock v0.5.0
 )
 
 require (
