@@ -74,6 +74,10 @@ func (m *mockBucketeerSDK) ObjectVariationDetails(
 	return m.objectEvaluation
 }
 
+func (m *mockBucketeerSDK) Close(ctx context.Context) error {
+	return nil
+}
+
 func TestBooleanEvaluation(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
