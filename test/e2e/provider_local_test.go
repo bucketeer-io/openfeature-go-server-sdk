@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/bucketeer-io/go-server-sdk/pkg/bucketeer"
-	"github.com/bucketeer-io/go-server-sdk/pkg/bucketeer/model"
 	provider "github.com/bucketeer-io/openfeature-go-server-sdk/pkg"
 	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/stretchr/testify/assert"
@@ -68,7 +67,7 @@ func TestLocalStringEvaluation(t *testing.T) {
 			flagID:         featureIDString,
 			defaultValue:   "default",
 			expectedValue:  featureIDStringVariation3,
-			expectedReason: openfeature.Reason(model.EvaluationReasonRule),
+			expectedReason: openfeature.TargetingMatchReason,
 		},
 	}
 
