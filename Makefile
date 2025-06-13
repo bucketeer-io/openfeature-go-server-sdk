@@ -38,3 +38,9 @@ test:
 e2e:
 	go test -v -race ./test/e2e/... \
 		-args -api-key=${API_KEY} -api-key-server=${API_KEY_SERVER} -api-endpoint=${API_ENDPOINT} -scheme=${SCHEME}
+		
+.PHONY: mockgen
+mockgen:
+	go generate -run="mockgen" ./pkg/...
+	make fmt
+

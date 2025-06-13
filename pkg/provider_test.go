@@ -8,9 +8,11 @@ import (
 	"maps"
 
 	"github.com/bucketeer-io/go-server-sdk/pkg/bucketeer/model"
-	"github.com/bucketeer-io/go-server-sdk/pkg/bucketeer/user"
 	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
+
+	mockProvider "github.com/bucketeer-io/openfeature-go-server-sdk/test/mock/provider"
 )
 
 // newTestProvider is a helper function that creates a Provider with a mock SDK for testing
@@ -20,60 +22,6 @@ func newTestProvider(mockSDK BucketeerSDK) *Provider {
 	}
 }
 
-// mockBucketeerSDK implements BucketeerSDK interface for testing
-type mockBucketeerSDK struct {
-	boolEvaluation    model.BKTEvaluationDetails[bool]
-	stringEvaluation  model.BKTEvaluationDetails[string]
-	int64Evaluation   model.BKTEvaluationDetails[int64]
-	float64Evaluation model.BKTEvaluationDetails[float64]
-	objectEvaluation  model.BKTEvaluationDetails[interface{}]
-}
-
-func (m *mockBucketeerSDK) BoolVariationDetails(
-	ctx context.Context,
-	user *user.User,
-	featureID string,
-	defaultValue bool,
-) model.BKTEvaluationDetails[bool] {
-	return m.boolEvaluation
-}
-
-func (m *mockBucketeerSDK) StringVariationDetails(
-	ctx context.Context,
-	user *user.User,
-	featureID string,
-	defaultValue string,
-) model.BKTEvaluationDetails[string] {
-	return m.stringEvaluation
-}
-
-func (m *mockBucketeerSDK) Int64VariationDetails(
-	ctx context.Context,
-	user *user.User,
-	featureID string,
-	defaultValue int64,
-) model.BKTEvaluationDetails[int64] {
-	return m.int64Evaluation
-}
-
-func (m *mockBucketeerSDK) Float64VariationDetails(
-	ctx context.Context,
-	user *user.User,
-	featureID string,
-	defaultValue float64,
-) model.BKTEvaluationDetails[float64] {
-	return m.float64Evaluation
-}
-
-func (m *mockBucketeerSDK) ObjectVariationDetails(
-	ctx context.Context,
-	user *user.User,
-	featureID string,
-	defaultValue interface{},
-) model.BKTEvaluationDetails[interface{}] {
-	return m.objectEvaluation
-}
-
 func TestBooleanEvaluation(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -81,13 +29,12 @@ func TestBooleanEvaluation(t *testing.T) {
 		flagKey                 string
 		targetKey               string
 		evalCtx                 map[string]interface{}
-		mockSDK                 *mockBucketeerSDK
 		defaultValue            bool
 		expectedValue           bool
 		expectedReason          openfeature.Reason
 		expectedResolutionError openfeature.ResolutionError
 		failToBucketeerUser     bool
-		boolEvaluation          model.BKTEvaluationDetails[bool]
+		setupMock               func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue bool)
 	}{
 		{
 			desc:      "successful boolean evaluation",
@@ -96,30 +43,24 @@ func TestBooleanEvaluation(t *testing.T) {
 			evalCtx: map[string]interface{}{
 				openfeature.TargetingKey: "test-user",
 			},
-			mockSDK: &mockBucketeerSDK{
-				boolEvaluation: model.BKTEvaluationDetails[bool]{
-					FeatureID:      "bool-flag",
-					UserID:         "test-user",
-					VariationID:    "variation-1",
-					VariationName:  "true-variation",
-					FeatureVersion: 1,
-					Reason:         model.EvaluationReasonTarget,
-					VariationValue: true,
-				},
-			},
 			defaultValue:            false,
 			expectedValue:           true,
 			expectedReason:          openfeature.TargetingMatchReason,
 			expectedResolutionError: openfeature.ResolutionError{},
 			failToBucketeerUser:     false,
-			boolEvaluation: model.BKTEvaluationDetails[bool]{
-				FeatureID:      "bool-flag",
-				UserID:         "test-user",
-				VariationID:    "variation-1",
-				VariationName:  "true-variation",
-				FeatureVersion: 1,
-				Reason:         model.EvaluationReasonTarget,
-				VariationValue: true,
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue bool) {
+				mockSDK.EXPECT().
+					BoolVariationDetails(gomock.Any(), gomock.Any(), flagKey, defaultValue).
+					Return(model.BKTEvaluationDetails[bool]{
+						FeatureID:      "bool-flag",
+						UserID:         "test-user",
+						VariationID:    "variation-1",
+						VariationName:  "true-variation",
+						FeatureVersion: 1,
+						Reason:         model.EvaluationReasonTarget,
+						VariationValue: true,
+					}).
+					Times(1)
 			},
 		},
 		{
@@ -129,30 +70,13 @@ func TestBooleanEvaluation(t *testing.T) {
 			evalCtx: map[string]interface{}{
 				openfeature.TargetingKey: 123, // Invalid type to cause error
 			},
-			mockSDK: &mockBucketeerSDK{
-				boolEvaluation: model.BKTEvaluationDetails[bool]{
-					FeatureID:      "bool-flag",
-					UserID:         "test-user",
-					VariationID:    "variation-1",
-					VariationName:  "true-variation",
-					FeatureVersion: 1,
-					Reason:         model.EvaluationReasonTarget,
-					VariationValue: true,
-				},
-			},
 			defaultValue:            false,
 			expectedValue:           false,
 			expectedReason:          openfeature.ErrorReason,
 			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value 123 can not be converted to string`),
-			failToBucketeerUser:     false,
-			boolEvaluation: model.BKTEvaluationDetails[bool]{
-				FeatureID:      "bool-flag",
-				UserID:         "test-user",
-				VariationID:    "variation-1",
-				VariationName:  "true-variation",
-				FeatureVersion: 1,
-				Reason:         model.EvaluationReasonTarget,
-				VariationValue: true,
+			failToBucketeerUser:     true,
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue bool) {
+				// No expectation set because toBucketeerUser fails before SDK call
 			},
 		},
 		{
@@ -162,30 +86,24 @@ func TestBooleanEvaluation(t *testing.T) {
 			evalCtx: map[string]interface{}{
 				openfeature.TargetingKey: "test-user",
 			},
-			mockSDK: &mockBucketeerSDK{
-				boolEvaluation: model.BKTEvaluationDetails[bool]{
-					FeatureID:      "bool-flag",
-					UserID:         "test-user",
-					VariationID:    "",
-					VariationName:  "",
-					FeatureVersion: 0,
-					Reason:         model.EvaluationReasonErrorFlagNotFound,
-					VariationValue: false,
-				},
-			},
 			defaultValue:            false,
 			expectedValue:           false,
 			expectedReason:          openfeature.Reason(model.EvaluationReasonErrorFlagNotFound),
 			expectedResolutionError: openfeature.NewFlagNotFoundResolutionError(string(model.EvaluationReasonErrorFlagNotFound)),
 			failToBucketeerUser:     false,
-			boolEvaluation: model.BKTEvaluationDetails[bool]{
-				FeatureID:      "bool-flag",
-				UserID:         "test-user",
-				VariationID:    "",
-				VariationName:  "",
-				FeatureVersion: 0,
-				Reason:         model.EvaluationReasonErrorFlagNotFound,
-				VariationValue: false,
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue bool) {
+				mockSDK.EXPECT().
+					BoolVariationDetails(gomock.Any(), gomock.Any(), flagKey, defaultValue).
+					Return(model.BKTEvaluationDetails[bool]{
+						FeatureID:      "bool-flag",
+						UserID:         "test-user",
+						VariationID:    "",
+						VariationName:  "",
+						FeatureVersion: 0,
+						Reason:         model.EvaluationReasonErrorFlagNotFound,
+						VariationValue: false,
+					}).
+					Times(1)
 			},
 		},
 		{
@@ -195,30 +113,24 @@ func TestBooleanEvaluation(t *testing.T) {
 			evalCtx: map[string]interface{}{
 				openfeature.TargetingKey: "test-user",
 			},
-			mockSDK: &mockBucketeerSDK{
-				boolEvaluation: model.BKTEvaluationDetails[bool]{
-					FeatureID:      "bool-flag",
-					UserID:         "test-user",
-					VariationID:    "variation-1",
-					VariationName:  "wrong-type",
-					FeatureVersion: 1,
-					Reason:         model.EvaluationReasonErrorWrongType,
-					VariationValue: false,
-				},
-			},
 			defaultValue:            false,
 			expectedValue:           false,
 			expectedReason:          openfeature.Reason(model.EvaluationReasonErrorWrongType),
 			expectedResolutionError: openfeature.NewTypeMismatchResolutionError(string(model.EvaluationReasonErrorWrongType)),
 			failToBucketeerUser:     false,
-			boolEvaluation: model.BKTEvaluationDetails[bool]{
-				FeatureID:      "bool-flag",
-				UserID:         "test-user",
-				VariationID:    "variation-1",
-				VariationName:  "wrong-type",
-				FeatureVersion: 1,
-				Reason:         model.EvaluationReasonErrorWrongType,
-				VariationValue: false,
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue bool) {
+				mockSDK.EXPECT().
+					BoolVariationDetails(gomock.Any(), gomock.Any(), flagKey, defaultValue).
+					Return(model.BKTEvaluationDetails[bool]{
+						FeatureID:      "bool-flag",
+						UserID:         "test-user",
+						VariationID:    "variation-1",
+						VariationName:  "wrong-type",
+						FeatureVersion: 1,
+						Reason:         model.EvaluationReasonErrorWrongType,
+						VariationValue: false,
+					}).
+					Times(1)
 			},
 		},
 		{
@@ -228,30 +140,24 @@ func TestBooleanEvaluation(t *testing.T) {
 			evalCtx: map[string]interface{}{
 				openfeature.TargetingKey: "test-user",
 			},
-			mockSDK: &mockBucketeerSDK{
-				boolEvaluation: model.BKTEvaluationDetails[bool]{
-					FeatureID:      "bool-flag",
-					UserID:         "test-user",
-					VariationID:    "",
-					VariationName:  "",
-					FeatureVersion: 0,
-					Reason:         model.EvaluationReasonErrorException,
-					VariationValue: false,
-				},
-			},
 			defaultValue:            false,
 			expectedValue:           false,
 			expectedReason:          openfeature.ErrorReason,
 			expectedResolutionError: openfeature.NewGeneralResolutionError(string(model.EvaluationReasonErrorException)),
 			failToBucketeerUser:     false,
-			boolEvaluation: model.BKTEvaluationDetails[bool]{
-				FeatureID:      "bool-flag",
-				UserID:         "test-user",
-				VariationID:    "",
-				VariationName:  "",
-				FeatureVersion: 0,
-				Reason:         model.EvaluationReasonErrorException,
-				VariationValue: false,
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue bool) {
+				mockSDK.EXPECT().
+					BoolVariationDetails(gomock.Any(), gomock.Any(), flagKey, defaultValue).
+					Return(model.BKTEvaluationDetails[bool]{
+						FeatureID:      "bool-flag",
+						UserID:         "test-user",
+						VariationID:    "",
+						VariationName:  "",
+						FeatureVersion: 0,
+						Reason:         model.EvaluationReasonErrorException,
+						VariationValue: false,
+					}).
+					Times(1)
 			},
 		},
 	}
@@ -259,7 +165,14 @@ func TestBooleanEvaluation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
-			mockSDK := test.mockSDK
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockSDK := mockProvider.NewMockBucketeerSDK(ctrl)
+
+			if test.setupMock != nil {
+				test.setupMock(mockSDK, test.flagKey, test.defaultValue)
+			}
 
 			provider := newTestProvider(mockSDK)
 
@@ -291,8 +204,8 @@ func TestStringEvaluation(t *testing.T) {
 		expectedValue           string
 		expectedReason          openfeature.Reason
 		expectedResolutionError openfeature.ResolutionError
-		stringEvaluation        model.BKTEvaluationDetails[string]
 		failToBucketeerUser     bool
+		setupMock               func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue string)
 	}{
 		{
 			desc:      "successful string evaluation",
@@ -306,14 +219,19 @@ func TestStringEvaluation(t *testing.T) {
 			expectedReason:          openfeature.TargetingMatchReason,
 			expectedResolutionError: openfeature.ResolutionError{},
 			failToBucketeerUser:     false,
-			stringEvaluation: model.BKTEvaluationDetails[string]{
-				FeatureID:      "string-flag",
-				UserID:         "test-user",
-				VariationID:    "variation-2",
-				VariationName:  "string-variation",
-				FeatureVersion: 1,
-				Reason:         model.EvaluationReasonTarget,
-				VariationValue: "feature-enabled",
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue string) {
+				mockSDK.EXPECT().
+					StringVariationDetails(gomock.Any(), gomock.Any(), flagKey, defaultValue).
+					Return(model.BKTEvaluationDetails[string]{
+						FeatureID:      "string-flag",
+						UserID:         "test-user",
+						VariationID:    "variation-2",
+						VariationName:  "string-variation",
+						FeatureVersion: 1,
+						Reason:         model.EvaluationReasonTarget,
+						VariationValue: "feature-enabled",
+					}).
+					Times(1)
 			},
 		},
 		{
@@ -327,15 +245,9 @@ func TestStringEvaluation(t *testing.T) {
 			expectedValue:           "default-value",
 			expectedReason:          openfeature.ErrorReason,
 			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value 123 can not be converted to string`),
-			failToBucketeerUser:     false,
-			stringEvaluation: model.BKTEvaluationDetails[string]{
-				FeatureID:      "string-flag",
-				UserID:         "test-user",
-				VariationID:    "variation-2",
-				VariationName:  "string-variation",
-				FeatureVersion: 1,
-				Reason:         model.EvaluationReasonTarget,
-				VariationValue: "feature-enabled",
+			failToBucketeerUser:     true,
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue string) {
+				// No expectation set because toBucketeerUser fails before SDK call
 			},
 		},
 		{
@@ -350,14 +262,19 @@ func TestStringEvaluation(t *testing.T) {
 			expectedReason:          openfeature.Reason(model.EvaluationReasonErrorFlagNotFound),
 			expectedResolutionError: openfeature.NewFlagNotFoundResolutionError(string(model.EvaluationReasonErrorFlagNotFound)),
 			failToBucketeerUser:     false,
-			stringEvaluation: model.BKTEvaluationDetails[string]{
-				FeatureID:      "string-flag",
-				UserID:         "test-user",
-				VariationID:    "",
-				VariationName:  "",
-				FeatureVersion: 0,
-				Reason:         model.EvaluationReasonErrorFlagNotFound,
-				VariationValue: "default-value",
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue string) {
+				mockSDK.EXPECT().
+					StringVariationDetails(gomock.Any(), gomock.Any(), flagKey, defaultValue).
+					Return(model.BKTEvaluationDetails[string]{
+						FeatureID:      "string-flag",
+						UserID:         "test-user",
+						VariationID:    "",
+						VariationName:  "",
+						FeatureVersion: 0,
+						Reason:         model.EvaluationReasonErrorFlagNotFound,
+						VariationValue: "default-value",
+					}).
+					Times(1)
 			},
 		},
 	}
@@ -365,8 +282,13 @@ func TestStringEvaluation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
-			mockSDK := &mockBucketeerSDK{
-				stringEvaluation: test.stringEvaluation,
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockSDK := mockProvider.NewMockBucketeerSDK(ctrl)
+
+			if test.setupMock != nil {
+				test.setupMock(mockSDK, test.flagKey, test.defaultValue)
 			}
 
 			provider := newTestProvider(mockSDK)
@@ -399,8 +321,8 @@ func TestIntEvaluation(t *testing.T) {
 		expectedValue           int64
 		expectedReason          openfeature.Reason
 		expectedResolutionError openfeature.ResolutionError
-		int64Evaluation         model.BKTEvaluationDetails[int64]
 		failToBucketeerUser     bool
+		setupMock               func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue int64)
 	}{
 		{
 			desc:      "successful int evaluation",
@@ -414,14 +336,19 @@ func TestIntEvaluation(t *testing.T) {
 			expectedReason:          openfeature.TargetingMatchReason,
 			expectedResolutionError: openfeature.ResolutionError{},
 			failToBucketeerUser:     false,
-			int64Evaluation: model.BKTEvaluationDetails[int64]{
-				FeatureID:      "int-flag",
-				UserID:         "test-user",
-				VariationID:    "variation-3",
-				VariationName:  "int-variation",
-				FeatureVersion: 1,
-				Reason:         model.EvaluationReasonTarget,
-				VariationValue: int64(42),
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue int64) {
+				mockSDK.EXPECT().
+					Int64VariationDetails(gomock.Any(), gomock.Any(), flagKey, defaultValue).
+					Return(model.BKTEvaluationDetails[int64]{
+						FeatureID:      "int-flag",
+						UserID:         "test-user",
+						VariationID:    "variation-3",
+						VariationName:  "int-variation",
+						FeatureVersion: 1,
+						Reason:         model.EvaluationReasonTarget,
+						VariationValue: int64(42),
+					}).
+					Times(1)
 			},
 		},
 		{
@@ -435,15 +362,9 @@ func TestIntEvaluation(t *testing.T) {
 			expectedValue:           0,
 			expectedReason:          openfeature.ErrorReason,
 			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value 123 can not be converted to string`),
-			failToBucketeerUser:     false,
-			int64Evaluation: model.BKTEvaluationDetails[int64]{
-				FeatureID:      "int-flag",
-				UserID:         "test-user",
-				VariationID:    "variation-3",
-				VariationName:  "int-variation",
-				FeatureVersion: 1,
-				Reason:         model.EvaluationReasonTarget,
-				VariationValue: int64(42),
+			failToBucketeerUser:     true,
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue int64) {
+				// No expectation set because toBucketeerUser fails before SDK call
 			},
 		},
 	}
@@ -451,8 +372,13 @@ func TestIntEvaluation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
-			mockSDK := &mockBucketeerSDK{
-				int64Evaluation: test.int64Evaluation,
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockSDK := mockProvider.NewMockBucketeerSDK(ctrl)
+
+			if test.setupMock != nil {
+				test.setupMock(mockSDK, test.flagKey, test.defaultValue)
 			}
 
 			provider := newTestProvider(mockSDK)
@@ -485,8 +411,8 @@ func TestFloatEvaluation(t *testing.T) {
 		expectedValue           float64
 		expectedReason          openfeature.Reason
 		expectedResolutionError openfeature.ResolutionError
-		float64Evaluation       model.BKTEvaluationDetails[float64]
 		failToBucketeerUser     bool
+		setupMock               func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue float64)
 	}{
 		{
 			desc:      "successful float evaluation",
@@ -500,14 +426,19 @@ func TestFloatEvaluation(t *testing.T) {
 			expectedReason:          openfeature.TargetingMatchReason,
 			expectedResolutionError: openfeature.ResolutionError{},
 			failToBucketeerUser:     false,
-			float64Evaluation: model.BKTEvaluationDetails[float64]{
-				FeatureID:      "float-flag",
-				UserID:         "test-user",
-				VariationID:    "variation-4",
-				VariationName:  "float-variation",
-				FeatureVersion: 1,
-				Reason:         model.EvaluationReasonTarget,
-				VariationValue: 3.14,
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue float64) {
+				mockSDK.EXPECT().
+					Float64VariationDetails(gomock.Any(), gomock.Any(), flagKey, defaultValue).
+					Return(model.BKTEvaluationDetails[float64]{
+						FeatureID:      "float-flag",
+						UserID:         "test-user",
+						VariationID:    "variation-4",
+						VariationName:  "float-variation",
+						FeatureVersion: 1,
+						Reason:         model.EvaluationReasonTarget,
+						VariationValue: 3.14,
+					}).
+					Times(1)
 			},
 		},
 		{
@@ -521,15 +452,9 @@ func TestFloatEvaluation(t *testing.T) {
 			expectedValue:           0.0,
 			expectedReason:          openfeature.ErrorReason,
 			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value 123 can not be converted to string`),
-			failToBucketeerUser:     false,
-			float64Evaluation: model.BKTEvaluationDetails[float64]{
-				FeatureID:      "float-flag",
-				UserID:         "test-user",
-				VariationID:    "variation-4",
-				VariationName:  "float-variation",
-				FeatureVersion: 1,
-				Reason:         model.EvaluationReasonTarget,
-				VariationValue: 3.14,
+			failToBucketeerUser:     true,
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue float64) {
+				// No expectation set because toBucketeerUser fails before SDK call
 			},
 		},
 	}
@@ -537,8 +462,13 @@ func TestFloatEvaluation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
-			mockSDK := &mockBucketeerSDK{
-				float64Evaluation: test.float64Evaluation,
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockSDK := mockProvider.NewMockBucketeerSDK(ctrl)
+
+			if test.setupMock != nil {
+				test.setupMock(mockSDK, test.flagKey, test.defaultValue)
 			}
 
 			provider := newTestProvider(mockSDK)
@@ -571,8 +501,8 @@ func TestObjectEvaluation(t *testing.T) {
 		expectedValue           interface{}
 		expectedReason          openfeature.Reason
 		expectedResolutionError openfeature.ResolutionError
-		objectEvaluation        model.BKTEvaluationDetails[interface{}]
 		failToBucketeerUser     bool
+		setupMock               func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue interface{})
 	}{
 		{
 			desc:      "successful object evaluation",
@@ -590,18 +520,23 @@ func TestObjectEvaluation(t *testing.T) {
 			expectedReason:          openfeature.TargetingMatchReason,
 			expectedResolutionError: openfeature.ResolutionError{},
 			failToBucketeerUser:     false,
-			objectEvaluation: model.BKTEvaluationDetails[interface{}]{
-				FeatureID:      "object-flag",
-				UserID:         "test-user",
-				VariationID:    "variation-5",
-				VariationName:  "object-variation",
-				FeatureVersion: 1,
-				Reason:         model.EvaluationReasonTarget,
-				VariationValue: map[string]interface{}{
-					"key1": "value1",
-					"key2": 42,
-					"key3": true,
-				},
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue interface{}) {
+				mockSDK.EXPECT().
+					ObjectVariationDetails(gomock.Any(), gomock.Any(), flagKey, defaultValue).
+					Return(model.BKTEvaluationDetails[interface{}]{
+						FeatureID:      "object-flag",
+						UserID:         "test-user",
+						VariationID:    "variation-5",
+						VariationName:  "object-variation",
+						FeatureVersion: 1,
+						Reason:         model.EvaluationReasonTarget,
+						VariationValue: map[string]interface{}{
+							"key1": "value1",
+							"key2": 42,
+							"key3": true,
+						},
+					}).
+					Times(1)
 			},
 		},
 		{
@@ -615,19 +550,9 @@ func TestObjectEvaluation(t *testing.T) {
 			expectedValue:           map[string]interface{}{"default": true},
 			expectedReason:          openfeature.ErrorReason,
 			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value 123 can not be converted to string`),
-			failToBucketeerUser:     false,
-			objectEvaluation: model.BKTEvaluationDetails[interface{}]{
-				FeatureID:      "object-flag",
-				UserID:         "test-user",
-				VariationID:    "variation-5",
-				VariationName:  "object-variation",
-				FeatureVersion: 1,
-				Reason:         model.EvaluationReasonTarget,
-				VariationValue: map[string]interface{}{
-					"key1": "value1",
-					"key2": 42,
-					"key3": true,
-				},
+			failToBucketeerUser:     true,
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue interface{}) {
+				// No expectation set because toBucketeerUser fails before SDK call
 			},
 		},
 	}
@@ -635,8 +560,13 @@ func TestObjectEvaluation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
-			mockSDK := &mockBucketeerSDK{
-				objectEvaluation: test.objectEvaluation,
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockSDK := mockProvider.NewMockBucketeerSDK(ctrl)
+
+			if test.setupMock != nil {
+				test.setupMock(mockSDK, test.flagKey, test.defaultValue)
 			}
 
 			provider := newTestProvider(mockSDK)
@@ -745,7 +675,10 @@ func TestToBucketeerUser(t *testing.T) {
 }
 
 func TestProviderMetadata(t *testing.T) {
-	mockSDK := &mockBucketeerSDK{}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSDK := mockProvider.NewMockBucketeerSDK(ctrl)
 	provider := newTestProvider(mockSDK)
 
 	metadata := provider.Metadata()
@@ -753,7 +686,10 @@ func TestProviderMetadata(t *testing.T) {
 }
 
 func TestProviderHooks(t *testing.T) {
-	mockSDK := &mockBucketeerSDK{}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSDK := mockProvider.NewMockBucketeerSDK(ctrl)
 	provider := newTestProvider(mockSDK)
 
 	hooks := provider.Hooks()
