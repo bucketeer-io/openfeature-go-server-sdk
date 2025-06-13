@@ -88,20 +88,39 @@ func (p *Provider) Metadata() openfeature.Metadata {
 func convertReason(reason model.EvaluationReason) openfeature.Reason {
 	switch reason {
 	case model.EvaluationReasonTarget,
-		model.EvaluationReasonPrerequisite:
+		model.EvaluationReasonPrerequisite,
+		model.EvaluationReasonRule:
 		return openfeature.TargetingMatchReason
-	case model.EvaluationReasonRule:
-		return openfeature.Reason(reason)
 	case model.EvaluationReasonDefault:
 		return openfeature.DefaultReason
-	// TODO: Remove ReasonClient
-	// nolint:staticcheck
-	case model.EvaluationReasonClient:
-		return openfeature.StaticReason
 	case model.EvaluationReasonOffVariation:
 		return openfeature.DisabledReason
+	case model.EvaluationReasonErrorFeatureFlagIDNotSpecified,
+		model.EvaluationReasonErrorNoEvaluations,
+		model.EvaluationReasonErrorCacheNotFound,
+		model.EvaluationReasonErrorException:
+		return openfeature.ErrorReason
 	default:
 		return openfeature.Reason(reason)
+	}
+}
+
+// getEvaluationError returns a resolution error if the evaluation reason is an error
+func getEvaluationError(reason model.EvaluationReason) openfeature.ResolutionError {
+	switch reason {
+	case model.EvaluationReasonErrorFlagNotFound:
+		return openfeature.NewFlagNotFoundResolutionError(string(reason))
+	case model.EvaluationReasonErrorWrongType:
+		return openfeature.NewTypeMismatchResolutionError(string(reason))
+	case model.EvaluationReasonErrorUserIDNotSpecified:
+		return openfeature.NewTargetingKeyMissingResolutionError(string(reason))
+	case model.EvaluationReasonErrorFeatureFlagIDNotSpecified,
+		model.EvaluationReasonErrorNoEvaluations,
+		model.EvaluationReasonErrorCacheNotFound,
+		model.EvaluationReasonErrorException:
+		return openfeature.NewGeneralResolutionError(string(reason))
+	default:
+		return openfeature.ResolutionError{}
 	}
 }
 
@@ -128,7 +147,9 @@ func (p *Provider) BooleanEvaluation(
 	return openfeature.BoolResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-			Reason: convertReason(evaluation.Reason),
+			Reason:          convertReason(evaluation.Reason),
+			Variant:         evaluation.VariationName,
+			ResolutionError: getEvaluationError(evaluation.Reason),
 		},
 	}
 }
@@ -156,8 +177,9 @@ func (p *Provider) StringEvaluation(
 	return openfeature.StringResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-			Reason:  convertReason(evaluation.Reason),
-			Variant: evaluation.VariationName,
+			Reason:          convertReason(evaluation.Reason),
+			Variant:         evaluation.VariationName,
+			ResolutionError: getEvaluationError(evaluation.Reason),
 		},
 	}
 }
@@ -185,8 +207,9 @@ func (p *Provider) FloatEvaluation(
 	return openfeature.FloatResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-			Reason:  convertReason(evaluation.Reason),
-			Variant: evaluation.VariationName,
+			Reason:          convertReason(evaluation.Reason),
+			Variant:         evaluation.VariationName,
+			ResolutionError: getEvaluationError(evaluation.Reason),
 		},
 	}
 }
@@ -214,8 +237,9 @@ func (p *Provider) IntEvaluation(
 	return openfeature.IntResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-			Reason:  convertReason(evaluation.Reason),
-			Variant: evaluation.VariationName,
+			Reason:          convertReason(evaluation.Reason),
+			Variant:         evaluation.VariationName,
+			ResolutionError: getEvaluationError(evaluation.Reason),
 		},
 	}
 }
@@ -243,8 +267,9 @@ func (p *Provider) ObjectEvaluation(
 	return openfeature.InterfaceResolutionDetail{
 		Value: evaluation.VariationValue,
 		ProviderResolutionDetail: openfeature.ProviderResolutionDetail{
-			Reason:  convertReason(evaluation.Reason),
-			Variant: evaluation.VariationName,
+			Reason:          convertReason(evaluation.Reason),
+			Variant:         evaluation.VariationName,
+			ResolutionError: getEvaluationError(evaluation.Reason),
 		},
 	}
 }
