@@ -157,11 +157,8 @@ make test
 export API_KEY="YOUR_API_KEY"
 export API_ENDPOINT="YOUR_API_ENDPOINT"
 export TAG="YOUR_FEATURE_TAG" # optional
-export SCHEME="https" # optional
 make e2e
 ```
-
-For more details, see the [E2E Test README](./test/e2e/README.md).
 
 ## Contributing
 
