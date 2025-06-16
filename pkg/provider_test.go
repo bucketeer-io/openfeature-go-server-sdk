@@ -143,7 +143,7 @@ func TestBooleanEvaluation(t *testing.T) {
 			defaultValue:            false,
 			expectedValue:           false,
 			expectedReason:          openfeature.ErrorReason,
-			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value '{' can not be converted to string`),
+			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value 123 can not be converted to string`),
 			failToBucketeerUser:     false,
 			boolEvaluation: model.BKTEvaluationDetails[bool]{
 				FeatureID:      "bool-flag",
@@ -326,7 +326,7 @@ func TestStringEvaluation(t *testing.T) {
 			defaultValue:            "default-value",
 			expectedValue:           "default-value",
 			expectedReason:          openfeature.ErrorReason,
-			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value '{' can not be converted to string`),
+			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value 123 can not be converted to string`),
 			failToBucketeerUser:     false,
 			stringEvaluation: model.BKTEvaluationDetails[string]{
 				FeatureID:      "string-flag",
@@ -434,7 +434,7 @@ func TestIntEvaluation(t *testing.T) {
 			defaultValue:            0,
 			expectedValue:           0,
 			expectedReason:          openfeature.ErrorReason,
-			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value '{' can not be converted to string`),
+			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value 123 can not be converted to string`),
 			failToBucketeerUser:     false,
 			int64Evaluation: model.BKTEvaluationDetails[int64]{
 				FeatureID:      "int-flag",
@@ -520,7 +520,7 @@ func TestFloatEvaluation(t *testing.T) {
 			defaultValue:            0.0,
 			expectedValue:           0.0,
 			expectedReason:          openfeature.ErrorReason,
-			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value '{' can not be converted to string`),
+			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value 123 can not be converted to string`),
 			failToBucketeerUser:     false,
 			float64Evaluation: model.BKTEvaluationDetails[float64]{
 				FeatureID:      "float-flag",
@@ -614,7 +614,7 @@ func TestObjectEvaluation(t *testing.T) {
 			defaultValue:            map[string]interface{}{"default": true},
 			expectedValue:           map[string]interface{}{"default": true},
 			expectedReason:          openfeature.ErrorReason,
-			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value '{' can not be converted to string`),
+			expectedResolutionError: openfeature.NewTargetingKeyMissingResolutionError(`key "targetingKey", value 123 can not be converted to string`),
 			failToBucketeerUser:     false,
 			objectEvaluation: model.BKTEvaluationDetails[interface{}]{
 				FeatureID:      "object-flag",
@@ -696,7 +696,7 @@ func TestToBucketeerUser(t *testing.T) {
 			evalCtx: openfeature.FlattenedContext{
 				openfeature.TargetingKey: 123,
 			},
-			expectedErr: errors.New(`TARGETING_KEY_MISSING: key "targetingKey", value '{' can not be converted to string`),
+			expectedErr: errors.New(`TARGETING_KEY_MISSING: key "targetingKey", value 123 can not be converted to string`),
 		},
 		{
 			desc:        "empty context",
