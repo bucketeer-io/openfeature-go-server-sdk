@@ -157,7 +157,6 @@ make test
 ```bash
 export API_KEY="YOUR_API_KEY"
 export API_ENDPOINT="YOUR_API_ENDPOINT"
-export PORT="443"
 export TAG="YOUR_FEATURE_TAG" # optional
 export SCHEME="https" # optional
 make e2e
