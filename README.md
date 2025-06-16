@@ -45,7 +45,6 @@ func main() {
 		bucketeer.WithAPIKey("YOUR_API_KEY"),
 		bucketeer.WithAPIEndpoint("YOUR_API_ENDPOINT"),
 		bucketeer.WithTag("YOUR_FEATURE_TAG"),
-		bucketeer.WithScheme("https"),
 		// Add other options as needed
 	}
 
