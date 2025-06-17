@@ -45,16 +45,11 @@ const (
 )
 
 // createEvalContext creates an evaluation context for the given user ID
-func createEvalContext(userID string) openfeature.FlattenedContext {
+func createEvalContext(userID string) openfeature.EvaluationContext {
 	evalCtx := map[string]any{
 		openfeature.TargetingKey: userID,
 		"attr-key":               "attr-value",
 	}
 
-	flatCtx := openfeature.FlattenedContext{}
-	for k, v := range evalCtx {
-		flatCtx[k] = v
-	}
-
-	return flatCtx
+	return openfeature.NewEvaluationContext(userID, evalCtx)
 }
