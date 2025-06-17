@@ -38,8 +38,9 @@ func TestBooleanEvaluation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), timeout)
 	defer cancel()
 	provider := setupProvider(t, ctx)
-	openfeature.SetProvider(provider)
-	ofClient := openfeature.NewClient("bucketeer-test")
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, provider)
+	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
 		userID         string
@@ -119,8 +120,9 @@ func TestStringEvaluation(t *testing.T) {
 	}
 
 	provider := setupProvider(t, ctx)
-	openfeature.SetProvider(provider)
-	ofClient := openfeature.NewClient("bucketeer-test")
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, provider)
+	ofClient := openfeature.NewClient(testDomain)
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
@@ -141,8 +143,9 @@ func TestIntEvaluation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), timeout)
 	defer cancel()
 	provider := setupProvider(t, ctx)
-	openfeature.SetProvider(provider)
-	ofClient := openfeature.NewClient("bucketeer-test")
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, provider)
+	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
 		userID         string
@@ -187,8 +190,9 @@ func TestFloatEvaluation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), timeout)
 	defer cancel()
 	provider := setupProvider(t, ctx)
-	openfeature.SetProvider(provider)
-	ofClient := openfeature.NewClient("bucketeer-test")
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, provider)
+	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
 		userID         string
@@ -233,8 +237,9 @@ func TestObjectEvaluation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), timeout)
 	defer cancel()
 	provider := setupProvider(t, ctx)
-	openfeature.SetProvider(provider)
-	ofClient := openfeature.NewClient("bucketeer-test")
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, provider)
+	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
 		userID         string
