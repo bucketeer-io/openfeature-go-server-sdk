@@ -56,9 +56,13 @@ func main() {
 		log.Fatalf("Failed to create provider: %v", err)
 	}
 
+	// Set the provider and create client
+	openfeature.SetProvider(p)
+	client := openfeature.NewClient("example-app")
+
 	// Setup and start HTTP server
 	app := &exampleApp{
-		provider:         p,
+		client:           client,
 		booleanFeatureID: *booleanFeatureID,
 		stringFeatureID:  *stringFeatureID,
 		intFeatureID:     *intFeatureID,
@@ -73,7 +77,7 @@ func main() {
 }
 
 type exampleApp struct {
-	provider         openfeature.FeatureProvider
+	client           *openfeature.Client
 	booleanFeatureID string
 	stringFeatureID  string
 	intFeatureID     string
@@ -132,7 +136,7 @@ func (a *exampleApp) routes() http.Handler {
 	return mux
 }
 
-func (a *exampleApp) getUserCtx(r *http.Request) openfeature.FlattenedContext {
+func (a *exampleApp) getUserCtx(r *http.Request) openfeature.EvaluationContext {
 	userID := a.getUserID(r)
 
 	// Extract attributes from query parameters
@@ -151,7 +155,7 @@ func (a *exampleApp) getUserCtx(r *http.Request) openfeature.FlattenedContext {
 	// Add all query parameters as attributes using maps.Copy
 	maps.Copy(evalCtx, attributes)
 
-	return evalCtx
+	return openfeature.NewEvaluationContext(userID, evalCtx)
 }
 
 func (a *exampleApp) getUserID(r *http.Request) string {
@@ -181,21 +185,21 @@ func (a *exampleApp) booleanFeatureHandler(w http.ResponseWriter, r *http.Reques
 	defer cancel()
 
 	evalCtx := a.getUserCtx(r)
-	result := a.provider.BooleanEvaluation(ctx, a.booleanFeatureID, false, evalCtx)
+	result, err := a.client.BooleanValueDetails(ctx, a.booleanFeatureID, false, evalCtx)
 
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{
-	"featureId": %v,
+	"featureId": %q,
 	"value": %t,
-	"reason": %v,
-	"userId": %v,
+	"reason": %q,
+	"userId": %q,
 	"error": %v
 }`,
 		a.booleanFeatureID,
 		result.Value,
 		result.Reason,
-		evalCtx[openfeature.TargetingKey],
-		result.Error(),
+		evalCtx.TargetingKey(),
+		err,
 	)
 }
 
@@ -204,23 +208,23 @@ func (a *exampleApp) stringFeatureHandler(w http.ResponseWriter, r *http.Request
 	defer cancel()
 
 	evalCtx := a.getUserCtx(r)
-	result := a.provider.StringEvaluation(ctx, a.stringFeatureID, "default", evalCtx)
+	result, err := a.client.StringValueDetails(ctx, a.stringFeatureID, "default", evalCtx)
 
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{
-	"featureId": %v,
-	"value": %v,
-	"reason": %v,
-	"variant": %v,
-	"userId": %v,
+	"featureId": %q,
+	"value": %q,
+	"reason": %q,
+	"variant": %q,
+	"userId": %q,
 	"error": %v
 }`,
 		a.stringFeatureID,
 		result.Value,
 		result.Reason,
 		result.Variant,
-		evalCtx[openfeature.TargetingKey],
-		result.Error(),
+		evalCtx.TargetingKey(),
+		err,
 	)
 }
 
@@ -229,23 +233,23 @@ func (a *exampleApp) intFeatureHandler(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	evalCtx := a.getUserCtx(r)
-	result := a.provider.IntEvaluation(ctx, a.intFeatureID, 0, evalCtx)
+	result, err := a.client.IntValueDetails(ctx, a.intFeatureID, int64(0), evalCtx)
 
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{
-	"featureId": %v,
-	"value": %v,
-	"reason": %v,
-	"variant": %v,
-	"userId": %v,
+	"featureId": %q,
+	"value": %d,
+	"reason": %q,
+	"variant": %q,
+	"userId": %q,
 	"error": %v
 }`,
 		a.intFeatureID,
 		result.Value,
 		result.Reason,
 		result.Variant,
-		evalCtx[openfeature.TargetingKey],
-		result.Error(),
+		evalCtx.TargetingKey(),
+		err,
 	)
 }
 
@@ -254,23 +258,23 @@ func (a *exampleApp) floatFeatureHandler(w http.ResponseWriter, r *http.Request)
 	defer cancel()
 
 	evalCtx := a.getUserCtx(r)
-	result := a.provider.FloatEvaluation(ctx, a.floatFeatureID, 0.0, evalCtx)
+	result, err := a.client.FloatValueDetails(ctx, a.floatFeatureID, 0.0, evalCtx)
 
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{
-	"featureId": %v,
-	"value": %v,
-	"reason": %v,
-	"variant": %v,
-	"userId": %v,
+	"featureId": %q,
+	"value": %f,
+	"reason": %q,
+	"variant": %q,
+	"userId": %q,
 	"error": %v
 }`,
 		a.floatFeatureID,
 		result.Value,
 		result.Reason,
 		result.Variant,
-		evalCtx[openfeature.TargetingKey],
-		result.Error(),
+		evalCtx.TargetingKey(),
+		err,
 	)
 }
 
@@ -285,22 +289,22 @@ func (a *exampleApp) objectFeatureHandler(w http.ResponseWriter, r *http.Request
 
 	evalCtx := a.getUserCtx(r)
 	defaultObj := ExampleStruct{Name: "default", Value: 0}
-	result := a.provider.ObjectEvaluation(ctx, a.objectFeatureID, defaultObj, evalCtx)
+	result, err := a.client.ObjectValueDetails(ctx, a.objectFeatureID, defaultObj, evalCtx)
 
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{
-	"featureId": %v,
+	"featureId": %q,
 	"value": %v,
-	"reason": %v,
-	"variant": %v,
-	"userId": %v,
+	"reason": %q,
+	"variant": %q,
+	"userId": %q,
 	"error": %v
 }`,
 		a.objectFeatureID,
 		result.Value,
 		result.Reason,
 		result.Variant,
-		evalCtx[openfeature.TargetingKey],
-		result.Error(),
+		evalCtx.TargetingKey(),
+		err,
 	)
 }
