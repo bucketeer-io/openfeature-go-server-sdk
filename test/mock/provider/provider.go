@@ -56,6 +56,20 @@ func (mr *MockBucketeerSDKMockRecorder) BoolVariationDetails(ctx, arg1, featureI
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BoolVariationDetails", reflect.TypeOf((*MockBucketeerSDK)(nil).BoolVariationDetails), ctx, arg1, featureID, defaultValue)
 }
 
+// Close mocks base method.
+func (m *MockBucketeerSDK) Close(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockBucketeerSDKMockRecorder) Close(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockBucketeerSDK)(nil).Close), ctx)
+}
+
 // Float64VariationDetails mocks base method.
 func (m *MockBucketeerSDK) Float64VariationDetails(ctx context.Context, arg1 *user.User, featureID string, defaultValue float64) model.BKTEvaluationDetails[float64] {
 	m.ctrl.T.Helper()
