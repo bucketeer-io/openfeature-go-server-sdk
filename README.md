@@ -29,7 +29,7 @@ go get github.com/bucketeer-io/openfeature-go-server-sdk
 
 ### Initialize the provider
 
-Bucketeer provider needs to be created and then set in the global OpenFeatureAPI.
+This example follows the standard OpenFeature pattern: create a provider, set it globally, and then create clients to evaluate feature flags. The Bucketeer provider needs to be created and then set in the global OpenFeature API.
 
 ```go
 import (
@@ -54,15 +54,20 @@ func main() {
 		// Error handling
 	}
 
+	// Set the provider and create client
+	openfeature.SetProvider(p)
+	client := openfeature.NewClient("my-app")
+
 	// User configuration
 	userID := "targetingUserId"
-	evalCtx := openfeature.FlattenedContext{
+	evalCtx := openfeature.NewEvaluationContext(userID, map[string]interface{}{
 		openfeature.TargetingKey: userID,
 		// Add other attributes as needed
-	}
+	})
+
 	// Evaluate feature flag
-	result := p.BooleanEvaluation(context.Background(), "feature-flag-id", false, evalCtx)
-	if result.Error() != nil {
+	result, err := client.BooleanValueDetails(context.Background(), "feature-flag-id", false, evalCtx)
+	if err != nil {
 		// Handle error
 	}
 }
@@ -70,13 +75,13 @@ func main() {
 
 ### Evaluate a feature flag
 
-The Bucketeer provider supports evaluating different types of feature flags. Each evaluation method returns a resolution detail object containing the evaluated value and additional metadata.
+The OpenFeature client supports evaluating different types of feature flags. Each evaluation method returns a resolution detail object containing the evaluated value and additional metadata.
 
 #### Boolean Evaluation
 
 ```go
-result := p.BooleanEvaluation(context.Background(), "bool-feature-flag", false, evalCtx)
-if result.Error() != nil {
+result, err := client.BooleanValueDetails(context.Background(), "bool-feature-flag", false, evalCtx)
+if err != nil {
     // Handle error
 }
 // Access the evaluated value
@@ -86,8 +91,8 @@ boolValue := result.Value
 #### String Evaluation
 
 ```go
-result := p.StringEvaluation(context.Background(), "string-feature-flag", "default-value", evalCtx)
-if result.Error() != nil {
+result, err := client.StringValueDetails(context.Background(), "string-feature-flag", "default-value", evalCtx)
+if err != nil {
     // Handle error
 }
 // Access the evaluated value and variant
@@ -98,8 +103,8 @@ variant := result.Variant
 #### Integer Evaluation
 
 ```go
-result := p.IntEvaluation(context.Background(), "int-feature-flag", 100, evalCtx)
-if result.Error() != nil {
+result, err := client.IntValueDetails(context.Background(), "int-feature-flag", int64(100), evalCtx)
+if err != nil {
     // Handle error
 }
 // Access the evaluated value
@@ -109,8 +114,8 @@ intValue := result.Value
 #### Float Evaluation
 
 ```go
-result := p.FloatEvaluation(context.Background(), "float-feature-flag", 3.14, evalCtx)
-if result.Error() != nil {
+result, err := client.FloatValueDetails(context.Background(), "float-feature-flag", 3.14, evalCtx)
+if err != nil {
     // Handle error
 }
 // Access the evaluated value
@@ -123,8 +128,8 @@ floatValue := result.Value
 defaultObject := map[string]interface{}{
     "key": "default-value",
 }
-result := p.ObjectEvaluation(context.Background(), "object-feature-flag", defaultObject, evalCtx)
-if result.Error() != nil {
+result, err := client.ObjectValueDetails(context.Background(), "object-feature-flag", defaultObject, evalCtx)
+if err != nil {
     // Handle error
 }
 // Access the evaluated value
@@ -133,7 +138,19 @@ objectValue := result.Value
 
 See our [documentation](https://docs.bucketeer.io/sdk/server-side/go) for more SDK configuration.
 
-The evaluation context allows the client to specify contextual data that Bucketeer uses to evaluate the feature flags.
+### Evaluation Context
+
+The evaluation context allows the client to specify contextual data that Bucketeer uses to evaluate the feature flags. Use `openfeature.NewEvaluationContext()` to create the context:
+
+```go
+userID := "user-123"
+evalCtx := openfeature.NewEvaluationContext(userID, map[string]interface{}{
+    openfeature.TargetingKey: userID,
+    "department": "engineering",
+    "role": "developer",
+    "beta_tester": true,
+})
+```
 
 The `targetingKey` is the user ID (Unique ID) and cannot be empty.
 

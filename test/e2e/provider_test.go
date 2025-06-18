@@ -37,6 +37,10 @@ func TestBooleanEvaluation(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(t.Context(), timeout)
 	defer cancel()
+	provider := setupProvider(t, ctx)
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, provider)
+	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
 		userID         string
@@ -63,13 +67,12 @@ func TestBooleanEvaluation(t *testing.T) {
 		},
 	}
 
-	provider := setupProvider(t, ctx)
-
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
 			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
-			result := provider.BooleanEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			result, err := ofClient.BooleanValueDetails(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			assert.NoError(t, err)
 
 			assert.NotNil(t, result)
 			assert.Equal(t, tt.expectedValue, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
@@ -117,12 +120,16 @@ func TestStringEvaluation(t *testing.T) {
 	}
 
 	provider := setupProvider(t, ctx)
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, provider)
+	ofClient := openfeature.NewClient(testDomain)
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
 			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
-			result := provider.StringEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			result, err := ofClient.StringValueDetails(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			assert.NoError(t, err)
 
 			assert.NotNil(t, result)
 			assert.Equal(t, tt.expectedValue, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
@@ -135,6 +142,10 @@ func TestIntEvaluation(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(t.Context(), timeout)
 	defer cancel()
+	provider := setupProvider(t, ctx)
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, provider)
+	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
 		userID         string
@@ -160,14 +171,12 @@ func TestIntEvaluation(t *testing.T) {
 			expectedReason: openfeature.TargetingMatchReason,
 		},
 	}
-
-	provider := setupProvider(t, ctx)
-
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
 			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
-			result := provider.IntEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			result, err := ofClient.IntValueDetails(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			assert.NoError(t, err)
 
 			assert.NotNil(t, result)
 			assert.Equal(t, tt.expectedValue, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
@@ -180,6 +189,10 @@ func TestFloatEvaluation(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(t.Context(), timeout)
 	defer cancel()
+	provider := setupProvider(t, ctx)
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, provider)
+	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
 		userID         string
@@ -205,14 +218,12 @@ func TestFloatEvaluation(t *testing.T) {
 			expectedReason: openfeature.TargetingMatchReason,
 		},
 	}
-
-	provider := setupProvider(t, ctx)
-
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
 			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
-			result := provider.FloatEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			result, err := ofClient.FloatValueDetails(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			assert.NoError(t, err)
 
 			assert.NotNil(t, result)
 			assert.Equal(t, tt.expectedValue, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
@@ -225,6 +236,10 @@ func TestObjectEvaluation(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(t.Context(), timeout)
 	defer cancel()
+	provider := setupProvider(t, ctx)
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, provider)
+	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
 		userID         string
@@ -256,14 +271,12 @@ func TestObjectEvaluation(t *testing.T) {
 			expectedReason: openfeature.TargetingMatchReason,
 		},
 	}
-
-	provider := setupProvider(t, ctx)
-
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
 			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
-			result := provider.ObjectEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			result, err := ofClient.ObjectValueDetails(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			assert.NoError(t, err)
 
 			assert.NotNil(t, result)
 			assert.Equal(t, tt.expectedValue, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)

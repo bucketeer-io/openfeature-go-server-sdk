@@ -37,6 +37,9 @@ func TestLocalStringEvaluation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	p := setupProviderForLocal(t, ctx)
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, p)
+	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
 		userID         string
@@ -77,7 +80,8 @@ func TestLocalStringEvaluation(t *testing.T) {
 		t.Run(tt.desc, func(t *testing.T) {
 			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
-			result := p.StringEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			result, err := ofClient.StringValueDetails(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			assert.NoError(t, err)
 
 			assert.NotNil(t, result)
 			assert.Equal(t, tt.expectedValue, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
@@ -91,6 +95,9 @@ func TestLocalBoolEvaluation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	p := setupProviderForLocal(t, ctx)
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, p)
+	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
 		userID         string
@@ -123,7 +130,8 @@ func TestLocalBoolEvaluation(t *testing.T) {
 		t.Run(tt.desc, func(t *testing.T) {
 			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
-			result := p.BooleanEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			result, err := ofClient.BooleanValueDetails(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			assert.NoError(t, err)
 
 			assert.NotNil(t, result)
 			assert.Equal(t, tt.expectedValue, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
@@ -137,6 +145,9 @@ func TestLocalIntEvaluation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	p := setupProviderForLocal(t, ctx)
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, p)
+	ofClient := openfeature.NewClient(testDomain)
 
 	tests := []struct {
 		desc           string
@@ -170,7 +181,8 @@ func TestLocalIntEvaluation(t *testing.T) {
 		t.Run(tt.desc, func(t *testing.T) {
 			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
-			result := p.IntEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			result, err := ofClient.IntValueDetails(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			assert.NoError(t, err)
 
 			assert.NotNil(t, result)
 			assert.Equal(t, tt.expectedValue, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
@@ -184,6 +196,9 @@ func TestLocalFloatEvaluation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	p := setupProviderForLocal(t, ctx)
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, p)
+	ofClient := openfeature.NewClient(testDomain)
 
 	tests := []struct {
 		desc           string
@@ -216,7 +231,8 @@ func TestLocalFloatEvaluation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
 			evalCtx := createEvalContext(tt.userID)
-			result := p.FloatEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			result, err := ofClient.FloatValueDetails(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			assert.NoError(t, err)
 
 			assert.NotNil(t, result)
 			assert.Equal(t, tt.expectedValue, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
@@ -230,6 +246,9 @@ func TestLocalObjectEvaluation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	p := setupProviderForLocal(t, ctx)
+	testDomain := "test-" + t.Name()
+	openfeature.SetNamedProvider(testDomain, p)
+	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
 		userID         string
@@ -267,7 +286,8 @@ func TestLocalObjectEvaluation(t *testing.T) {
 		t.Run(tt.desc, func(t *testing.T) {
 			t.Parallel()
 			evalCtx := createEvalContext(tt.userID)
-			result := p.ObjectEvaluation(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			result, err := ofClient.ObjectValueDetails(ctx, tt.flagID, tt.defaultValue, evalCtx)
+			assert.NoError(t, err)
 
 			assert.NotNil(t, result)
 			assert.Equal(t, tt.expectedValue, result.Value, "userID: %s, flagID: %s", tt.userID, tt.flagID)
