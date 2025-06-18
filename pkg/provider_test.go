@@ -846,3 +846,47 @@ func TestGetEvaluationError(t *testing.T) {
 		})
 	}
 }
+
+func TestShutdown(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		desc      string
+		setupMock func(mockSDK *mockProvider.MockBucketeerSDK)
+	}{
+		{
+			desc: "successful shutdown",
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK) {
+				mockSDK.EXPECT().
+					Close(context.Background()).
+					Return(nil).
+					Times(1)
+			},
+		},
+		{
+			desc: "shutdown with error from SDK",
+			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK) {
+				mockSDK.EXPECT().
+					Close(context.Background()).
+					Return(errors.New("close error")).
+					Times(1)
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockSDK := mockProvider.NewMockBucketeerSDK(ctrl)
+
+			if test.setupMock != nil {
+				test.setupMock(mockSDK)
+			}
+
+			provider := newTestProvider(mockSDK)
+			provider.Shutdown()
+		})
+	}
+}
