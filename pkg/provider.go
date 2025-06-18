@@ -1,5 +1,6 @@
 package provider
 
+//go:generate mockgen -source=$GOFILE -package=$GOPACKAGE -destination=../test/mock/$GOPACKAGE/$GOFILE
 import (
 	"context"
 	"encoding/json"
