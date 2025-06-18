@@ -5,4 +5,4 @@
 
 ### Features
 
-* add initial implementation of the provider
+* openfeature provider implementation
