@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GOLANGCI_LINT: v2.1.2
+  GOLANGCI_LINT: v2.7.2
 
 jobs:
   pre-check:
