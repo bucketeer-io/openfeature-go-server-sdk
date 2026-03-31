@@ -88,7 +88,7 @@ func TestBooleanEvaluation(t *testing.T) {
 			},
 			defaultValue:            false,
 			expectedValue:           false,
-			expectedReason:          openfeature.Reason(model.EvaluationReasonErrorFlagNotFound),
+			expectedReason:          openfeature.ErrorReason,
 			expectedResolutionError: openfeature.NewFlagNotFoundResolutionError(string(model.EvaluationReasonErrorFlagNotFound)),
 			failToBucketeerUser:     false,
 			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue bool) {
@@ -115,7 +115,7 @@ func TestBooleanEvaluation(t *testing.T) {
 			},
 			defaultValue:            false,
 			expectedValue:           false,
-			expectedReason:          openfeature.Reason(model.EvaluationReasonErrorWrongType),
+			expectedReason:          openfeature.ErrorReason,
 			expectedResolutionError: openfeature.NewTypeMismatchResolutionError(string(model.EvaluationReasonErrorWrongType)),
 			failToBucketeerUser:     false,
 			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue bool) {
@@ -259,7 +259,7 @@ func TestStringEvaluation(t *testing.T) {
 			},
 			defaultValue:            "default-value",
 			expectedValue:           "default-value",
-			expectedReason:          openfeature.Reason(model.EvaluationReasonErrorFlagNotFound),
+			expectedReason:          openfeature.ErrorReason,
 			expectedResolutionError: openfeature.NewFlagNotFoundResolutionError(string(model.EvaluationReasonErrorFlagNotFound)),
 			failToBucketeerUser:     false,
 			setupMock: func(mockSDK *mockProvider.MockBucketeerSDK, flagKey string, defaultValue string) {
@@ -736,17 +736,17 @@ func TestConvertReason(t *testing.T) {
 		{
 			desc:            "error flag not found reason",
 			bucketeerReason: model.EvaluationReasonErrorFlagNotFound,
-			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorFlagNotFound),
+			expectedReason:  openfeature.ErrorReason,
 		},
 		{
 			desc:            "error wrong type reason",
 			bucketeerReason: model.EvaluationReasonErrorWrongType,
-			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorWrongType),
+			expectedReason:  openfeature.ErrorReason,
 		},
 		{
 			desc:            "error user id not specified reason",
 			bucketeerReason: model.EvaluationReasonErrorUserIDNotSpecified,
-			expectedReason:  openfeature.Reason(model.EvaluationReasonErrorUserIDNotSpecified),
+			expectedReason:  openfeature.ErrorReason,
 		},
 		{
 			desc:            "error feature flag id not specified reason",

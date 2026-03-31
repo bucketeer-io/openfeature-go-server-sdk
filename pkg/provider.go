@@ -100,7 +100,10 @@ func convertReason(reason model.EvaluationReason) openfeature.Reason {
 	case model.EvaluationReasonErrorFeatureFlagIDNotSpecified,
 		model.EvaluationReasonErrorNoEvaluations,
 		model.EvaluationReasonErrorCacheNotFound,
-		model.EvaluationReasonErrorException:
+		model.EvaluationReasonErrorException,
+		model.EvaluationReasonErrorFlagNotFound,
+		model.EvaluationReasonErrorWrongType,
+		model.EvaluationReasonErrorUserIDNotSpecified:
 		return openfeature.ErrorReason
 	default:
 		return openfeature.Reason(reason)
