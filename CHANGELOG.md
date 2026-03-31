@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.3](https://github.com/bucketeer-io/openfeature-go-server-sdk/compare/v0.0.2...v0.0.3) (2026-03-31)
+
+
+### Bug Fixes
+
+* evaluation error reasons mapping ([#19](https://github.com/bucketeer-io/openfeature-go-server-sdk/issues/19)) ([20d8427](https://github.com/bucketeer-io/openfeature-go-server-sdk/commit/20d84275399ec6963c7345883520ac2dd94d319c))
+
 ## [0.0.2](https://github.com/bucketeer-io/openfeature-go-server-sdk/compare/v0.0.1...v0.0.2) (2026-01-20)
 
 
