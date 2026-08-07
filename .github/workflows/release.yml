@@ -19,5 +19,29 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
       - uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d8567266a2445 # v4.2.0
+        id: release
         with:
           token: ${{ steps.app-token.outputs.token }} # App token so the tag/release created by release-please can trigger other workflows
+
+      # release-please builds the GitHub Release body from the release PR notes,
+      # not from CHANGELOG.md, so the "Go Server SDK Changes" block added by the
+      # augment-changelog workflow never reaches the published release. Re-sync
+      # the release body from the (already augmented) CHANGELOG.md in the current ref.
+      - name: Checkout
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Sync GitHub Release notes from CHANGELOG.md
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+        run: |
+          node .github/scripts/changelog-section.mjs --tag "${TAG_NAME}" > release-notes.md
+          gh release edit "${TAG_NAME}" --notes-file release-notes.md
