@@ -33,13 +33,30 @@ func setupProvider(t *testing.T, ctx context.Context) *provider.Provider {
 	return p
 }
 
+// testContext returns a timeout context that stays alive until the test and
+// all of its subtests finish.
+//
+// Important: do not use `defer cancel()` with parallel subtests. The parent
+// function returns as soon as subtests call t.Parallel(), so defer would
+// cancel the context before those subtests run. t.Cleanup runs after them.
+// Local evaluation does not use the request context for the network call,
+// which is why local e2e kept passing while remote failed with
+// "context canceled" after go-server-sdk v1.8 started honoring cancellation.
+func testContext(t *testing.T) context.Context {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	t.Cleanup(cancel)
+	return ctx
+}
+
 func TestBooleanEvaluation(t *testing.T) {
 	t.Parallel()
-	ctx, cancel := context.WithTimeout(t.Context(), timeout)
-	defer cancel()
+	ctx := testContext(t)
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, provider)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, provider); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
@@ -83,8 +100,7 @@ func TestBooleanEvaluation(t *testing.T) {
 
 func TestStringEvaluation(t *testing.T) {
 	t.Parallel()
-	ctx, cancel := context.WithTimeout(t.Context(), timeout)
-	defer cancel()
+	ctx := testContext(t)
 	tests := []struct {
 		desc           string
 		userID         string
@@ -121,7 +137,9 @@ func TestStringEvaluation(t *testing.T) {
 
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, provider)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, provider); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 
 	for _, tt := range tests {
@@ -140,11 +158,12 @@ func TestStringEvaluation(t *testing.T) {
 
 func TestIntEvaluation(t *testing.T) {
 	t.Parallel()
-	ctx, cancel := context.WithTimeout(t.Context(), timeout)
-	defer cancel()
+	ctx := testContext(t)
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, provider)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, provider); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
@@ -187,11 +206,12 @@ func TestIntEvaluation(t *testing.T) {
 
 func TestFloatEvaluation(t *testing.T) {
 	t.Parallel()
-	ctx, cancel := context.WithTimeout(t.Context(), timeout)
-	defer cancel()
+	ctx := testContext(t)
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, provider)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, provider); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
@@ -234,11 +254,12 @@ func TestFloatEvaluation(t *testing.T) {
 
 func TestObjectEvaluation(t *testing.T) {
 	t.Parallel()
-	ctx, cancel := context.WithTimeout(t.Context(), timeout)
-	defer cancel()
+	ctx := testContext(t)
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, provider)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, provider); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string

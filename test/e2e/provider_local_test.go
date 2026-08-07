@@ -38,7 +38,9 @@ func TestLocalStringEvaluation(t *testing.T) {
 	defer cancel()
 	p := setupProviderForLocal(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, p)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, p); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
@@ -96,7 +98,9 @@ func TestLocalBoolEvaluation(t *testing.T) {
 	defer cancel()
 	p := setupProviderForLocal(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, p)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, p); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
@@ -146,7 +150,9 @@ func TestLocalIntEvaluation(t *testing.T) {
 	defer cancel()
 	p := setupProviderForLocal(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, p)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, p); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 
 	tests := []struct {
@@ -197,7 +203,9 @@ func TestLocalFloatEvaluation(t *testing.T) {
 	defer cancel()
 	p := setupProviderForLocal(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, p)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, p); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 
 	tests := []struct {
@@ -247,7 +255,9 @@ func TestLocalObjectEvaluation(t *testing.T) {
 	defer cancel()
 	p := setupProviderForLocal(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, p)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, p); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
