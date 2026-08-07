@@ -1,0 +1,107 @@
+name: Bump Go Server SDK
+
+# Triggered automatically after a new go-server-sdk version is released
+# (dispatched from go-server-sdk's release workflow), or manually from the
+# GitHub Actions UI.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'github.com/bucketeer-io/go-server-sdk version to bump to (e.g. 1.7.0 or v1.7.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Resolve version
+        id: ctx
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if [[ -z "$VERSION" ]]; then
+            echo "No version provided." >&2
+            exit 1
+          fi
+          VERSION="${VERSION#v}"   # strip leading 'v' if present
+          BRANCH="deps/bump-go-server-sdk-v${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+
+      - name: Check branch does not already exist
+        id: check
+        env:
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+        run: |
+          if git ls-remote --heads origin "$BRANCH" | grep -q .; then
+            echo "Branch $BRANCH already exists — skipping (already bumped?)."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump go.mod and update go.sum
+        if: steps.check.outputs.skip != 'true'
+        env:
+          VERSION: ${{ steps.ctx.outputs.version }}
+        run: |
+          # Retry briefly — the module proxy may lag right after the tag is created.
+          for i in 1 2 3 4 5 6; do
+            if go get "github.com/bucketeer-io/go-server-sdk@v${VERSION}"; then
+              break
+            fi
+            if [ "$i" -eq 6 ]; then
+              echo "Failed to fetch go-server-sdk@v${VERSION} after retries." >&2
+              exit 1
+            fi
+            echo "go get failed; retrying in 30s ($i/6)..."
+            sleep 30
+          done
+          go mod tidy
+
+      - name: Commit and push
+        if: steps.check.outputs.skip != 'true'
+        env:
+          VERSION: ${{ steps.ctx.outputs.version }}
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add go.mod go.sum
+          if git diff --cached --quiet; then
+            echo "No dependency changes — go-server-sdk@v${VERSION} may already be in use."
+            exit 0
+          fi
+          git commit -m "build(deps): bump go-server-sdk to v${VERSION}"
+          git push origin "$BRANCH"
+          echo "pushed=true" >> "$GITHUB_ENV"
+
+      - name: Create PR and enable auto-merge
+        if: steps.check.outputs.skip != 'true' && env.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.ctx.outputs.version }}
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+        run: |
+          PR_URL=$(gh pr create \
+            --title "build(deps): bump go-server-sdk to v${VERSION}" \
+            --body "Automated dependency bump triggered by the release of [go-server-sdk v${VERSION}](https://github.com/bucketeer-io/go-server-sdk/releases/tag/v${VERSION}).
+
+          _This PR was created automatically. It will merge once all required checks pass._" \
+            --base main \
+            --head "$BRANCH")
+          gh pr merge "$PR_URL" --auto --squash
