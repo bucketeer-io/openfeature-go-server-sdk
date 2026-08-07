@@ -3,7 +3,7 @@
 ## [0.0.4](https://github.com/bucketeer-io/openfeature-go-server-sdk/compare/v0.0.3...v0.0.4) (2026-08-07)
 
 
-### build(deps): bump dependencies
+### Build System
 
 * align Go toolchain with go-server-sdk v1.8.0 ([#24](https://github.com/bucketeer-io/openfeature-go-server-sdk/issues/24)) ([270bef1](https://github.com/bucketeer-io/openfeature-go-server-sdk/commit/270bef198183212f410844467c1984a3ddcd51c9))
 
