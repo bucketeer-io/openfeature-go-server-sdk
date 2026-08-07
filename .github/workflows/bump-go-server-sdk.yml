@@ -57,6 +57,10 @@ jobs:
         if: steps.check.outputs.skip != 'true'
         env:
           VERSION: ${{ steps.ctx.outputs.version }}
+          # setup-go defaults to GOTOOLCHAIN=local, which rejects deps that need
+          # a newer Go than go.mod. auto lets the toolchain upgrade when needed
+          # (and go mod tidy will bump the go directive accordingly).
+          GOTOOLCHAIN: auto
         run: |
           # Retry briefly — the module proxy may lag right after the tag is created.
           for i in 1 2 3 4 5 6; do
