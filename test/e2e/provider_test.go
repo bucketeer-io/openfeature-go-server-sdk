@@ -33,9 +33,18 @@ func setupProvider(t *testing.T, ctx context.Context) *provider.Provider {
 	return p
 }
 
+// testContext returns a timeout context for e2e evaluations.
+// Prefer Background over t.Context(): with a t.Parallel() parent and parallel
+// subtests, the parent t.Context() is canceled when the parent body returns
+// (before subtests finish). go-server-sdk v1.8+ honors that cancellation on
+// remote evaluation, which surfaces as "context canceled".
+func testContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), timeout)
+}
+
 func TestBooleanEvaluation(t *testing.T) {
 	t.Parallel()
-	ctx, cancel := context.WithTimeout(t.Context(), timeout)
+	ctx, cancel := testContext()
 	defer cancel()
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
@@ -83,7 +92,7 @@ func TestBooleanEvaluation(t *testing.T) {
 
 func TestStringEvaluation(t *testing.T) {
 	t.Parallel()
-	ctx, cancel := context.WithTimeout(t.Context(), timeout)
+	ctx, cancel := testContext()
 	defer cancel()
 	tests := []struct {
 		desc           string
@@ -140,7 +149,7 @@ func TestStringEvaluation(t *testing.T) {
 
 func TestIntEvaluation(t *testing.T) {
 	t.Parallel()
-	ctx, cancel := context.WithTimeout(t.Context(), timeout)
+	ctx, cancel := testContext()
 	defer cancel()
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
@@ -187,7 +196,7 @@ func TestIntEvaluation(t *testing.T) {
 
 func TestFloatEvaluation(t *testing.T) {
 	t.Parallel()
-	ctx, cancel := context.WithTimeout(t.Context(), timeout)
+	ctx, cancel := testContext()
 	defer cancel()
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
@@ -234,7 +243,7 @@ func TestFloatEvaluation(t *testing.T) {
 
 func TestObjectEvaluation(t *testing.T) {
 	t.Parallel()
-	ctx, cancel := context.WithTimeout(t.Context(), timeout)
+	ctx, cancel := testContext()
 	defer cancel()
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
