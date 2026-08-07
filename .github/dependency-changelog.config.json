@@ -1,0 +1,25 @@
+{
+  "sectionTitle": "Go Server SDK Changes",
+  "sectionIntro": "This release also brings the following changes from the underlying Go server SDK.",
+  "dependencies": [
+    {
+      "name": "Go Server SDK",
+      "shortName": "go-server-sdk",
+      "repo": "bucketeer-io/go-server-sdk",
+      "versionFile": "go.mod",
+      "versionRegex": "github\\.com/bucketeer-io/go-server-sdk\\sv([0-9][^\\s]*)"
+    }
+  ],
+  "skipPatterns": [
+    "^\\*\\*deps:\\*\\*\\s+update\\s+all\\s+non-major\\s+dependencies"
+  ],
+  "sectionOrder": [
+    "Features",
+    "Bug Fixes",
+    "Performance Improvements",
+    "Reverts",
+    "Refactoring",
+    "Miscellaneous",
+    "Build System"
+  ]
+}
