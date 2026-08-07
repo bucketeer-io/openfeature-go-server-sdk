@@ -54,7 +54,9 @@ func TestBooleanEvaluation(t *testing.T) {
 	ctx := testContext(t)
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, provider)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, provider); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
@@ -135,7 +137,9 @@ func TestStringEvaluation(t *testing.T) {
 
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, provider)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, provider); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 
 	for _, tt := range tests {
@@ -157,7 +161,9 @@ func TestIntEvaluation(t *testing.T) {
 	ctx := testContext(t)
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, provider)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, provider); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
@@ -203,7 +209,9 @@ func TestFloatEvaluation(t *testing.T) {
 	ctx := testContext(t)
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, provider)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, provider); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
@@ -249,7 +257,9 @@ func TestObjectEvaluation(t *testing.T) {
 	ctx := testContext(t)
 	provider := setupProvider(t, ctx)
 	testDomain := "test-" + t.Name()
-	openfeature.SetNamedProvider(testDomain, provider)
+	if err := openfeature.SetNamedProviderAndWait(testDomain, provider); err != nil {
+		t.Fatalf("Failed to set provider: %v", err)
+	}
 	ofClient := openfeature.NewClient(testDomain)
 	tests := []struct {
 		desc           string
