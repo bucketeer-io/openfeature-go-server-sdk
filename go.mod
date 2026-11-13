@@ -1,6 +1,6 @@
 module github.com/bucketeer-io/openfeature-go-server-sdk
 
-go 1.25.8
+go 1.26.11
 
 require (
 	github.com/bucketeer-io/go-server-sdk v1.8.0
