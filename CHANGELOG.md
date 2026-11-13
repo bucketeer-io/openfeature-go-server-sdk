@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.5](https://github.com/bucketeer-io/openfeature-go-server-sdk/compare/v0.0.4...v0.0.5) (2026-11-13)
+
+
+### Build System
+
+* bump Go to 1.26.11 for the November security release ([#26](https://github.com/bucketeer-io/openfeature-go-server-sdk/issues/26)) ([46308f6](https://github.com/bucketeer-io/openfeature-go-server-sdk/commit/46308f60aca8abba1de91c6560de6f73df36eeae))
+
 ## [0.0.4](https://github.com/bucketeer-io/openfeature-go-server-sdk/compare/v0.0.3...v0.0.4) (2026-08-07)
 
 
